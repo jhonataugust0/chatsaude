@@ -5,7 +5,7 @@ import requests
 
 class TestRegisterFlow():
   headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-  host = "https://8188-187-19-172-237.sa.ngrok.io/message"
+  host = "https://f3fb-2804-29b8-5119-83a-5185-da03-e6f6-5f09.sa.ngrok.io/message"
 
   def test_message_default(self, client: TestClient) -> None: 
     request_body = b'SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=Ol%C3%A1&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01'
