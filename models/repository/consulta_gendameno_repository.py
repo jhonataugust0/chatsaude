@@ -91,7 +91,7 @@ class AgendamentosRepository:
     """
     with Connection() as connection:
       try:
-        data_insert = Agendamentos(id_usuario = user_id, tipo_agendamento = "Consulta")
+        data_insert = Agendamentos(id_usuario = user_id, tipo_agendamento = "Consulta", ativo = 1)
         connection.session.add(data_insert)
         connection.session.commit()
         schedule = str(data_insert).replace(' ', '').split(',')
@@ -118,7 +118,32 @@ class AgendamentosRepository:
         connection.session.query(Agendamentos).filter(Agendamentos.id_usuario == id_usuario).update({ table: input_data})
         connection.session.commit()
 
-        schedule = connection.session.query(Agendamentos).filter(Agendamentos.id_usuario == id_usuario).one()
+        schedule = connection.session.query(Agendamentos).filter(Agendamentos.id_usuario == id_usuario).first()
+        schedule = str(schedule).replace(' ', '').split(',')
+        data_schedule = dict(i.split("=") for i in schedule)
+        return data_schedule  
+      
+      except Exception as error:
+        message = "Erro ao atualizar os dados do usuário"
+        log = Logging(message)
+        log.warning('update_schedule_from_user_id', None, error, 500, {'params': {'id_usuario':id_usuario, 'table': table, 'input_data': input_data}})
+        return {}
+      
+  def update_schedule_from_id(self, id_usuario: int, table: str, input_data: int):
+    """
+      Atualiza uma coluna no banco de dados baseado no id do
+      usuário informado
+
+      :params id_usuario: int 
+      :params table: str
+      :params input_data: int
+    """
+    with Connection() as connection:
+      try:
+        connection.session.query(Agendamentos).filter(Agendamentos.id_usuario == id_usuario, Agendamentos.ativo == 1).update({ table: input_data})
+        connection.session.commit()
+
+        schedule = connection.session.query(Agendamentos).filter(Agendamentos.id_usuario == id_usuario, Agendamentos.ativo == 1).first()
         schedule = str(schedule).replace(' ', '').split(',')
         data_schedule = dict(i.split("=") for i in schedule)
         return data_schedule  

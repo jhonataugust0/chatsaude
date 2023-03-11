@@ -61,7 +61,7 @@ class FluxoEtapaRepository:
     """
     with Connection() as connection:
       try:
-        data_insert = FluxoEtapa(id_usuario = user_id, fluxo_registro = flow, etapa_registro = status, fluxo_agendamento_consulta = 0, etapa_agendamento_consulta = 0, fluxo_agendamento_exame = 0, etapa_agendamento_exame = 0, lista_unidades = 0)
+        data_insert = FluxoEtapa(id_usuario = user_id, fluxo_registro = flow, etapa_registro = status, fluxo_agendamento_consulta = 0, etapa_agendamento_consulta = 0, fluxo_agendamento_exame = 0, etapa_agendamento_exame = 0, lista_unidades = 0, fluxo_denuncia = 0)
         connection.session.add(data_insert)
         connection.session.commit()
         stage = str(data_insert).replace(' ', '').split(',')

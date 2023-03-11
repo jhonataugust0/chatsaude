@@ -195,10 +195,9 @@ class BotDispatcher:
       if int(user_flow['etapa_agendamento_consulta']) == 1:
         specialty_entity = EspecialidadeRepository()
         specialty_user_request = specialty_entity.select_specialty_from_name(message)
-        
         user_flow = flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
         
-        consult_entity.update_schedule_from_user_id(user['id'], 'id_especialidade', specialty_user_request['id'])
+        consult_data = consult_entity.update_schedule_from_id(user['id'], 'id_especialidade', specialty_user_request['id'])
         
         send_message("Escolha a unidade suportada mais próxima de você\nDigite o número correspondente ao da unidade desejada\nEx: 1", number_formated)
         unities = unities_entity.select_all()
