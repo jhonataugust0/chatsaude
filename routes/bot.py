@@ -49,7 +49,7 @@ class Bot():
       bot_response = ''
       bot_response = dispatcher.message_processor(message, int(number), user)
       
-      trigger_return = dispatcher.trigger_processing(bot_response, number, user)
+      dispatcher.trigger_processing(bot_response, number, user)
       
     except Exception as error:
       message_log = 'Erro ao tratar a mensagem recebida'

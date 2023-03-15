@@ -13,6 +13,7 @@ from time import sleep
 from utils.bot_utils import send_message
 from utils.validators.validate_email import validate_email
 from utils.validators.validate_times import validate_date
+from utils.date import get_more_forty_five
 
 class BotOptions:
   REGISTER_USER = '1'
@@ -225,7 +226,9 @@ class BotDispatcher:
       
       elif int(user_flow['etapa_agendamento_consulta']) == 4:
         user_flow = flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
+        final_schedule = get_more_forty_five(str(message))
         consult_data = consult_entity.update_schedule_from_user_id(user['id'], 'horario_inicio_agendamento', str(message))
+        consult_data = consult_entity.update_schedule_from_user_id(user['id'], 'horario_termino_agendamento', final_schedule)
         send_message("(Opcional) Digite uma mensagem descrevendo qual a sua necessidade para a especialidade escolhida.\nEx: Exame de rotina\nVocê pode digitar qualquer coisa para ignorar essa etapa)", number_formated)
       
       elif int(user_flow['etapa_agendamento_consulta']) == 5:
