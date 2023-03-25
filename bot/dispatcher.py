@@ -13,6 +13,8 @@ from time import sleep
 from utils.bot_utils import send_message
 from utils.validators.validate_email import validate_email
 from utils.validators.validate_times import validate_date
+from utils.validators.validate_cpf import validate_cpf
+from utils.validators.validate_c_sus import validate_cns
 from utils.date import get_more_forty_five
 
 class BotOptions:
@@ -147,9 +149,12 @@ class BotDispatcher:
         send_message("Digite seu CPF\nEx:157.934.724-28", number_formated) 
 
       elif int(user_flow['etapa_registro']) == 5:
-        user_entity.update_user_data(user['telefone'], 'cpf', int(message.replace('.','').replace('-','')))
-        flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
-        send_message("Digite o número do seu RG\nEx:4563912-9", number_formated)            
+        if (validate_cpf(message)):
+          user_entity.update_user_data(user['telefone'], 'cpf', int(message.replace('.','').replace('-','')))
+          flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
+          send_message("Digite o número do seu RG\nEx:4563912-9", number_formated)            
+        else:
+          send_message("Por favor, digite um cpf válido", number_formated)
 
       elif int(user_flow['etapa_registro']) == 6:
         user_entity.update_user_data(user['telefone'], 'rg', int(message.replace('-','')))
@@ -157,9 +162,12 @@ class BotDispatcher:
         send_message("Digite o número do seu cartão do SUS\nEx:145.000.875.165.186", number_formated) 
 
       elif int(user_flow['etapa_registro']) == 7:
-        user_entity.update_user_data(user['telefone'], 'c_sus', str(message))
-        flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
-        send_message("Digite o nome do seu bairro\nEx: Benedito Bentes", number_formated)    
+        if (validate_cpf(str(message).replace('.','').replace('-',''))):
+          user_entity.update_user_data(user['telefone'], 'c_sus', str(message).replace('.','').replace('-',''))
+          flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
+          send_message("Digite o nome do seu bairro\nEx: Benedito Bentes", number_formated)    
+        else:
+          send_message("Por favor, digite um cartão nacional de saúde válido", number_formated)
 
       elif int(user_flow['etapa_registro']) == 8:
         user_entity.update_user_data(user['telefone'], 'bairro', str(message))
