@@ -1,3 +1,5 @@
+from fastapi import HTTPException, status, Response
+
 from ..configs.connection import Connection
 from ..entities.agendamentos_model import Agendamentos
 from ..repository.especialidade_repository import EspecialidadeRepository
@@ -20,13 +22,13 @@ class AgendamentosRepository:
         message = f"Não foi possível resgatar os agendamentos"
         log = Logging(f'{message}\n' + f'{error}')
         log.info()
-        return {'value': None} 
+        return {} 
 
       except Exception as error:
         message = "Erro ao resgatar dados de agendamento"
         log = Logging(message)
         log.warning('select_all', None, error, 500, {'params': None})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def select_data_schedule_from_user_id(self, user_id: int):
     """
@@ -47,15 +49,15 @@ class AgendamentosRepository:
         message = f"Não foi possível encontrar agendamentos relacionados ao usuário {user_id}"
         log = Logging(message)
         log.info()
-        return {'value': None} 
+        return {} 
 
       except Exception as error:
         message = f"Erro ao resgatar dados de agendamento do usuário {user_id['id']}"
         log = Logging(message)
         log.warning('select_data_schedule_from_user_id', None, error, 500, {'params': {'user_id': user_id}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
-  def select_all_data_from_schedule_with_id(id: int):
+  def select_all_data_from_schedule_with_id(self, id: int):
     with Connection() as connection:
       try:
         data = connection.session.query(Agendamentos).filter(Agendamentos.id_usuario == id).one()
@@ -75,13 +77,13 @@ class AgendamentosRepository:
         message = f"Não foi possível encontrar agendamentos relacionados ao usuário {id}"
         log = Logging(message)
         log.info()
-        return {'value': None} 
+        return {} 
 
       except Exception as error:
         message = f"Erro ao resgatar dados de agendamento do usuário {id['id']}"
         log = Logging(message)
         log.warning('select_data_schedule_from_user_id', None, error, 500, {'params': {'id': id}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def insert_new_schedule_consult(self, user_id: int):
     """
@@ -102,7 +104,7 @@ class AgendamentosRepository:
         message = "Erro ao inserir um novo agendamento no banco de dados"
         log = Logging(message)
         log.warning('insert_new_schedule_consult', None, error, 500, {'params': {'user_id': user_id}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
   
   def update_schedule_from_user_id(self, id_usuario: int, table: str, input_data: int):
     """
@@ -127,7 +129,7 @@ class AgendamentosRepository:
         message = "Erro ao atualizar os dados do usuário"
         log = Logging(message)
         log.warning('update_schedule_from_user_id', None, error, 500, {'params': {'id_usuario':id_usuario, 'table': table, 'input_data': input_data}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
       
   def update_schedule_from_id(self, id_usuario: int, table: str, input_data: int):
     """
@@ -152,7 +154,7 @@ class AgendamentosRepository:
         message = "Erro ao atualizar os dados do usuário"
         log = Logging(message)
         log.warning('update_schedule_from_user_id', None, error, 500, {'params': {'id_usuario':id_usuario, 'table': table, 'input_data': input_data}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def delete_schedule_from_user_id(self, user_id: int):
     """
@@ -176,4 +178,4 @@ class AgendamentosRepository:
         message = f"Erro ao excluir o agendamento do usuário {user_id}"
         log = Logging(message)
         log.warning('delete_schedule_from_user_id', None, error, 500, {'params': {'user_id': user_id,}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)

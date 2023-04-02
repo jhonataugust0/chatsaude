@@ -1,15 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Body
+from fastapi import APIRouter, Depends, HTTPException, Request, Body, status, Response
 from twilio.twiml.messaging_response import MessagingResponse
+from urllib.parse import parse_qs
+
+from models.repository.fluxo_etapa_repository import FluxoEtapaRepository
+from models.repository.user_repository import UserRepository
+from log.logging import Logging
+from utils.bot_utils import send_message
 from bot.dispatcher import BotDispatcher
 from bot.dispatcher import BotOptions
 from bot.replies import Replies
-from utils.bot_utils import send_message
-import json
-import os
-from log.logging import Logging
-from models.repository.user_repository import UserRepository
-from models.repository.fluxo_etapa_repository import FluxoEtapaRepository
-from urllib.parse import parse_qs
+
 
 class Bot():
   
@@ -31,6 +31,7 @@ class Bot():
     """
     try:
       body = (await request.body()).decode()
+      # 'SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=Ol%C3%A1&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01'
       body = parse_qs(body)
       message = body['Body'][0]
       number = body['WaId'][0]
@@ -40,7 +41,8 @@ class Bot():
       message_log = 'Erro ao obter os dados da mensagem recebida'
       log = Logging(message_log)
       log.warning('message', None, str(error), 500, {'params': body})
-
+      raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log)
+    
     try:
       user_entity = UserRepository()
       user = ''
@@ -55,7 +57,8 @@ class Bot():
       message_log = 'Erro ao tratar a mensagem recebida'
       log = Logging(message_log)
       log.warning('message', None, str(error), 500, {'params': body})
-
+      raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+    
     try:
       
       if 'telefone' in user:
@@ -79,14 +82,18 @@ class Bot():
             if int(user_stage['fluxo_agendamento_consulta']) == 1 or int(user_stage['etapa_agendamento_consulta']) == 1:
             
               if (bot_response['message'] != BotOptions.LIST_UNITIES and bot_response['message'] != BotOptions.MAKE_REPORT and bot_response['message'] != BotOptions.REGISTER_USER and bot_response['message'] != BotOptions.SCHEDULE_CONSULT and bot_response['message'] != BotOptions.SCHEDULE_EXAM and bot_response['message'] != Replies.DEFAULT):
-                send_message(bot_response['message'], number_formated)
-          
+                # send_message(bot_response['message'], number_formated)
+                return Response(status_code=status.HTTP_200_OK, content="mensagem enviada")
             else:
-              send_message(bot_response['message'], number_formated)
+              # send_message(bot_response['message'], number_formated)
+              return Response(status_code=status.HTTP_200_OK, content="mensagem enviada")
         
         else:
-          send_message(bot_response['message'], number_formated)
+          # send_message(bot_response['message'], number_formated)
+          return Response(status_code=status.HTTP_200_OK, content="mensagem enviada")
+
     except Exception as error:
       message_log = f'Erro ao inicializar o fluxo'
       log = Logging(message_log)
       log.warning('message', None, str(error), 500, {'params': body})
+      raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)

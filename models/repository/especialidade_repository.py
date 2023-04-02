@@ -1,3 +1,4 @@
+from fastapi import HTTPException, status, Response
 from ..configs.connection import Connection
 from ..entities.especialidade_model import Especialidade
 from log.logging import Logging
@@ -18,13 +19,13 @@ class EspecialidadeRepository:
         message = f"Não foi possível resgatar as especialidades"
         log = Logging(message)
         log.info()
-        return {} 
+        return {}
 
       except Exception as error:
         message = "Erro ao resgatar dados das especialidades"
         log = Logging(message)
         log.warning('select_all', None, error, 500, {'params': None})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def select_specialty_from_name(self, name: str):
     with Connection() as connection:
@@ -45,7 +46,7 @@ class EspecialidadeRepository:
         message = f"Erro ao resgatar dados da especialidade {name}"
         log = Logging(message)
         log.warning('select_specialty_from_name', None, error, 500, {'name': name})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
   
   def select_specialty_from_id(self, id: int):
     with Connection() as connection:
@@ -60,13 +61,13 @@ class EspecialidadeRepository:
         message = f"Não foi possível resgatar a especialidade de nome {id}"
         log = Logging(message)
         log.info()
-        return {} 
+        return {}
         
       except Exception as error:
         message = f"Erro ao resgatar dados da especialidade {id}"
         log = Logging(message)
         log.warning('select_specialty_from_id', None, error, 500, {'id': id})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def insert(self, name):
     with Connection() as connection:

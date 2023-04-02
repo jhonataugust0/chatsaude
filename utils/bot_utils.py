@@ -1,3 +1,4 @@
+from fastapi import HTTPException, status, Response
 import os
 from log.logging import Logging
 from twilio.rest import Client
@@ -13,10 +14,11 @@ def send_message(message: str, number: str):
     account_sid = os.environ.get("ACCOUNT_SID")
     auth_token = os.environ.get("AUTH_TOKEN")
     client = Client(account_sid, auth_token)
-    client.messages.create(from_=os.environ.get("NUM_CHATBOT"), body=str(message), to=number)
+    client.messages.create(from_=os.environ.get("NUM_CHATBOT"), body=message, to=number)
+    return Response(status_code=status.HTTP_200_OK, content="Mensagem enviada com sucesso")
   
   except Exception as error:
     message_log = 'Erro ao enviar mensagem para o whatsapp'
     log = Logging(message_log)
-    log.warning('send_message', None, str(error), 500, {'params': {'message': message, 'number': number}})
-    return False
+    log.warning('# send_message', None, str(error), 500, {'params': {'message': message, 'number': number}})
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log)

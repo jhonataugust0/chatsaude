@@ -23,7 +23,8 @@ class FluxoEtapa(Base):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-      return {'id': int(self.id), 'id_usuario': int(self.id_usuario), 'fluxo_registro': int(self.fluxo_registro), 'etapa_registro': int(self.etapa_registro), 'fluxo_agendamento_consulta': int(self.fluxo_agendamento_consulta), 'etapa_agendamento_consulta': int(self.etapa_agendamento_consulta), 'fluxo_agendamento_exame': int(self.fluxo_agendamento_exame), 'etapa_agendamento_exame':int(self.etapa_agendamento_exame), 'lista_unidades': int(self.lista_unidades), 'fluxo_denuncia': int(self.fluxo_denuncia)}
+      data = {'id': int(self.id), 'id_usuario': int(self.id_usuario), 'fluxo_registro': int(self.fluxo_registro), 'etapa_registro': int(self.etapa_registro), 'fluxo_agendamento_consulta': int(self.fluxo_agendamento_consulta), 'etapa_agendamento_consulta': int(self.etapa_agendamento_consulta), 'fluxo_agendamento_exame': int(self.fluxo_agendamento_exame), 'etapa_agendamento_exame':int(self.etapa_agendamento_exame), 'lista_unidades': int(self.lista_unidades), 'fluxo_denuncia': int(self.fluxo_denuncia)}
+      return data
 
     def __str__(self):
       return f"""id = {int(self.id)}, id_usuario= {int(self.id_usuario)}, fluxo_registro= {int(self.fluxo_registro)}, etapa_registro= {int(self.etapa_registro)}, fluxo_agendamento_consulta= {int(self.fluxo_agendamento_consulta)}, etapa_agendamento_consulta= {int(self.etapa_agendamento_consulta)}, fluxo_agendamento_exame= {int(self.fluxo_agendamento_exame)}, etapa_agendamento_exame={int(self.etapa_agendamento_exame)}, lista_unidades= {int(self.lista_unidades)}, fluxo_denuncia= {int(self.fluxo_denuncia)}"""

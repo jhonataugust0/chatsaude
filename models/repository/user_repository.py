@@ -1,3 +1,5 @@
+from fastapi import HTTPException, status, Response
+
 from ..configs.connection import Connection
 from ..entities.user_model import Usuario
 from log.logging import Logging
@@ -17,12 +19,12 @@ class UserRepository:
         message = f"Não foi possível resgatar os usuários"
         log = Logging(message)
         log.info()
-        return {} 
+        return {}
       
       except Exception as error:
         message = "Erro ao resgatar os dados dos usuários"
         log = Logging(message)
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def select_user_from_cellphone(self, cellphone):
     """
@@ -43,13 +45,13 @@ class UserRepository:
         message = f"Não foi possível resgatar o usuário de telefone {cellphone}"
         log = Logging(message)
         log.info()
-        return {} 
+        return {}
  
       except Exception as error:
         message = "Erro ao resgatar os dados do usuário"
         log = Logging(message)
         log.warning('select_user_from_cellphone', None, error, 500, {'params': {'cellphone': cellphone}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
       
 
   def insert_new_user(self, telefone: int):
@@ -65,13 +67,13 @@ class UserRepository:
         connection.session.commit()
         user_dict = str(data_insert).replace(' ', '').split(',')
         user_dict = dict(i.split("=") for i in user_dict)
-          
+        return user_dict
+        
       except Exception as error:
         message = "Erro ao inserir um novo usuário no banco de dados"
         log = Logging(message)
         log.warning('insert_new_user', None, error, 500, {'params': {'telefone': telefone}})
-        user_dict = {}
-      return user_dict
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def update_user_data(self, telefone, table, input_data):
     """
@@ -91,7 +93,7 @@ class UserRepository:
         message = "Erro ao atualizar um fluxo existente no banco de dados"
         log = Logging(message)
         log.warning('update_user_data', None, error, 500, {'params': {'telefone':telefone, 'table': table, 'input_data': input_data}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def delete(self, name):
     with Connection() as connection:

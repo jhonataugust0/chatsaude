@@ -1,3 +1,5 @@
+from fastapi import HTTPException, status, Response
+
 from log.logging import Logging
 from ..configs.connection import Connection
 from ..entities.unidade_model import Unidade
@@ -10,17 +12,18 @@ class UnidadeRepository:
       try:
         data = connection.session.query(Unidade).order_by(Unidade.id).all()
         data_unity = [u.__dict__ for u in data]
+
       except NoResultFound:
         message = f"Não foi possível resgatar as unidades"
         log = Logging(message)
         log.info()
-        data_unity = [{}]
-
+        return {}
+        
       except Exception as error:
         message = "Erro ao resgatar as unidades"
         log = Logging(message)
         log.warning('select_all', None, error, 500, {'params': None})
-        data_unity = [{}]
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
       return data_unity
 
   def select_unity_from_id(self, unity_id):
@@ -42,13 +45,13 @@ class UnidadeRepository:
         message = f"Não foi possível encontrar a unidade {unity_id}"
         log = Logging(message)
         log.info()
-        return {} 
+        return {}
 
       except Exception as error:
         message = f"Erro ao resgatar dados da unidade {unity_id}"
         log = Logging(message)
         log.warning('select_unity_from_id', None, error, 500, {'params': {'unity_id': unity_id}})
-        return {} 
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def select_unity_from_district(self, district):
     """
@@ -72,14 +75,13 @@ class UnidadeRepository:
         message = f"Não foi possível encontrar a unidade do bairro {district}"
         log = Logging(message)
         log.info()
-        data_unity = [{}]
+        return {}
 
       except Exception as error:
         message = f"Erro ao resgatar dados da unidade {district}"
         log = Logging(message)
         log.warning('select_unity_from_district', None, error, 500, {'params': {'unity_id': district}})
-        data_unity = [{}]
-      return data_unity
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def insert_new_unity(self, name: str):
     """
@@ -100,7 +102,7 @@ class UnidadeRepository:
         message = "Erro ao inserir um novo agendamento no banco de dados"
         log = Logging(message)
         log.warning('insert_new_unity', None, error, 500, {'params': {'user_id': name}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def update_unity_from_id(self, unity_id: int, table: str, input_data: int):
     """
@@ -121,7 +123,7 @@ class UnidadeRepository:
         message = "Erro ao atualizar os dados da unidade"
         log = Logging(message)
         log.warning('update_unity_from_id', None, error, 500, {'params': {'unity_id':unity_id, 'table': table, 'input_data': input_data}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   def delete_unity_from_id(self, unity_id: int):
     """
@@ -145,7 +147,7 @@ class UnidadeRepository:
         message = f"Erro ao excluir o agendamento do usuário {unity_id}"
         log = Logging(message)
         log.warning('delete_schedule_from_user_id', None, error, 500, {'params': {'unity_id': unity_id,}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
 
 

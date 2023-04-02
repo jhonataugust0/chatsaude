@@ -1,3 +1,5 @@
+from fastapi import HTTPException, status, Response
+
 from ..configs.connection import Connection
 from ..entities.fluxo_etapa_model import FluxoEtapa
 from log.logging import Logging
@@ -21,8 +23,14 @@ class FluxoEtapaRepository:
         message = f"Não foi possível resgatar os fluxos"
         log = Logging(message)
         log.info()
-        return {} 
-
+        return {}
+      
+      except Exception as error:
+        message = "Erro ao resgatar todos os fluxos"
+        log = Logging(message)
+        log.warning('select_stage_from_user_id', None, error, 500, {'params': None})
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+      
   def select_stage_from_user_id(self, user_id: int):
     """
       Busca no banco de dados a linha de fluxo correspondente 
@@ -44,13 +52,13 @@ class FluxoEtapaRepository:
         message = f"Não foi possível encontrar fluxos relacionados ao usuário {user_id}"
         log = Logging(f'{message}\n' + f'{error}')
         log.info()
-        return {'value': None}
+        return {}
       
       except Exception as error:
         message = "Erro ao resgatar dados do usuário"
         log = Logging(message)
         log.warning('select_stage_from_user_id', None, error, 500, {'params': {'user_id': user_id}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
   
   def insert_new_user_flow(self, user_id: int, flow: int, status: int):
     """
@@ -67,11 +75,12 @@ class FluxoEtapaRepository:
         stage = str(data_insert).replace(' ', '').split(',')
         stage = dict(i.split("=") for i in stage)
         return stage
+      
       except Exception as error:
         message = "Erro ao inserir um novo fluxo no banco de dados"
         log = Logging(message)
         log.warning('insert_new_register_flow', None, error, 500, {'params': {'flow': flow, 'status': status}})
-      return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
   # def insert_new_schedule_consult_flow(self, user_id: int, flow: int, status: int):
   #   """
@@ -119,7 +128,7 @@ class FluxoEtapaRepository:
         message = "Erro ao atualizar os dados do usuário"
         log = Logging(message)
         log.warning('update_flow_from_user_id', None, error, 500, {'params': {'id_usuario':id_usuario, 'table': table, 'input_data': input_data}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
   
   
   def delete_flow_from_user_id(self, user_id: int):
@@ -138,11 +147,11 @@ class FluxoEtapaRepository:
         message = f"Não foi possível encontrar fluxos relacionados ao usuário {user_id}"
         log = Logging(message)
         log.info()
-        return {} 
+        return {}
  
       except Exception as error:
         message = f"Erro ao excluir o agendamento do usuário {user_id}"
         log = Logging(message)
         log.warning('delete_flow_from_user_id', None, error, 500, {'params': {'user_id': user_id,}})
-        return {}
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
 
