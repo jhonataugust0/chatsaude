@@ -1,9 +1,15 @@
 import datetime
 import pytz
 from log.logging import Logging
-
+from fastapi import HTTPException, status
 
 def validate_date(date: str):
+  """
+    Verifica a existência de uma data informada e a valida
+
+      :params date: str
+      return -> dict 
+  """
   try:
     # Faz o split e transforma em números
     day, month, year = map(int, date.split('/'))
@@ -45,5 +51,8 @@ def validate_date(date: str):
     message_log = f'Erro ao validar a data {date}'
     log = Logging(message_log)
     log.warning('validate_email', None, str(error), 500, {'params': {'date': date}})
-    # print(error)
+    raise HTTPException(
+          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+          detail=message_log
+      )
 

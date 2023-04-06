@@ -24,7 +24,10 @@ class UserRepository:
       except Exception as error:
         message = "Erro ao resgatar os dados dos usuários"
         log = Logging(message)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
 
   def select_user_from_cellphone(self, cellphone):
     """
@@ -51,7 +54,10 @@ class UserRepository:
         message = "Erro ao resgatar os dados do usuário"
         log = Logging(message)
         log.warning('select_user_from_cellphone', None, error, 500, {'params': {'cellphone': cellphone}})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
       
 
   def insert_new_user(self, telefone: int):
@@ -73,7 +79,10 @@ class UserRepository:
         message = "Erro ao inserir um novo usuário no banco de dados"
         log = Logging(message)
         log.warning('insert_new_user', None, error, 500, {'params': {'telefone': telefone}})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=message
+        )
 
   def update_user_data(self, telefone, table, input_data):
     """
@@ -89,11 +98,15 @@ class UserRepository:
         data_update = connection.session.query(Usuario).filter(Usuario.telefone == telefone).update({ table: input_data})
         connection.session.commit()
         return data_update  
+      
       except Exception as error:
         message = "Erro ao atualizar um fluxo existente no banco de dados"
         log = Logging(message)
         log.warning('update_user_data', None, error, 500, {'params': {'telefone':telefone, 'table': table, 'input_data': input_data}})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
 
   def delete(self, name):
     with Connection() as connection:

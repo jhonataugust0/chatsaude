@@ -23,7 +23,10 @@ class UnidadeRepository:
         message = "Erro ao resgatar as unidades"
         log = Logging(message)
         log.warning('select_all', None, error, 500, {'params': None})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
       return data_unity
 
   def select_unity_from_id(self, unity_id):
@@ -51,7 +54,10 @@ class UnidadeRepository:
         message = f"Erro ao resgatar dados da unidade {unity_id}"
         log = Logging(message)
         log.warning('select_unity_from_id', None, error, 500, {'params': {'unity_id': unity_id}})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
 
   def select_unity_from_district(self, district):
     """
@@ -81,7 +87,10 @@ class UnidadeRepository:
         message = f"Erro ao resgatar dados da unidade {district}"
         log = Logging(message)
         log.warning('select_unity_from_district', None, error, 500, {'params': {'unity_id': district}})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
 
   def insert_new_unity(self, name: str):
     """
@@ -102,7 +111,10 @@ class UnidadeRepository:
         message = "Erro ao inserir um novo agendamento no banco de dados"
         log = Logging(message)
         log.warning('insert_new_unity', None, error, 500, {'params': {'user_id': name}})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
 
   def update_unity_from_id(self, unity_id: int, table: str, input_data: int):
     """
@@ -123,7 +135,10 @@ class UnidadeRepository:
         message = "Erro ao atualizar os dados da unidade"
         log = Logging(message)
         log.warning('update_unity_from_id', None, error, 500, {'params': {'unity_id':unity_id, 'table': table, 'input_data': input_data}})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
 
   def delete_unity_from_id(self, unity_id: int):
     """
@@ -147,7 +162,10 @@ class UnidadeRepository:
         message = f"Erro ao excluir o agendamento do usuário {unity_id}"
         log = Logging(message)
         log.warning('delete_schedule_from_user_id', None, error, 500, {'params': {'unity_id': unity_id,}})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
 
 
 

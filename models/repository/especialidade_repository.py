@@ -25,7 +25,10 @@ class EspecialidadeRepository:
         message = "Erro ao resgatar dados das especialidades"
         log = Logging(message)
         log.warning('select_all', None, error, 500, {'params': None})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
 
   def select_specialty_from_name(self, name: str):
     with Connection() as connection:
@@ -46,7 +49,10 @@ class EspecialidadeRepository:
         message = f"Erro ao resgatar dados da especialidade {name}"
         log = Logging(message)
         log.warning('select_specialty_from_name', None, error, 500, {'name': name})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
   
   def select_specialty_from_id(self, id: int):
     with Connection() as connection:
@@ -67,7 +73,10 @@ class EspecialidadeRepository:
         message = f"Erro ao resgatar dados da especialidade {id}"
         log = Logging(message)
         log.warning('select_specialty_from_id', None, error, 500, {'id': id})
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
 
   def insert(self, name):
     with Connection() as connection:

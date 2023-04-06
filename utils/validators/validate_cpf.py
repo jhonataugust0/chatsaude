@@ -1,6 +1,14 @@
 from log.logging import Logging
+from fastapi import HTTPException, status
 
 def validate_cpf(numbers: str):
+    """
+        Verificação matemática para a validação do número de
+        CPF do usuário
+
+            :params numbers: str
+            return boolean
+    """
     try:
         
         #  Obtém os números do CPF e ignora outros caracteres
@@ -28,3 +36,7 @@ def validate_cpf(numbers: str):
       message_log = f'Erro ao validar o CPF {numbers}'
       log = Logging(message_log)
       log.warning('validate_cpf', None, str(error), 500, {'params': {'numbers': numbers}})
+      raise HTTPException(
+          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+          detail=message_log
+      )
