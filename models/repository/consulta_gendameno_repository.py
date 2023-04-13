@@ -200,3 +200,86 @@ class AgendamentosRepository:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=message
         )
+  
+  def get_last_time_scheduele_from_specialty_id(self, specialty_id: int, unity_id: int):
+    with Connection() as connection:
+      try:
+        data = connection.session.query(
+          Agendamentos.data_agendamento, 
+          Agendamentos.horario_termino_agendamento).filter(
+          Agendamentos.id_especialidade == specialty_id, 
+          Agendamentos.id_unidade == unity_id,
+          Agendamentos.data_agendamento != None, 
+          Agendamentos.horario_termino_agendamento != None).order_by(
+          Agendamentos.id.desc()).first()
+        data_schedule = dict(zip(data._fields, data))
+        return data_schedule   
+
+      except NoResultFound:
+        message = f"Não foi possível encontrar agendamentos com a especialidade de id {specialty_id} na unidade de id {unity_id}"
+        log = Logging(message)
+        log.info()
+        return {} 
+
+      except Exception as error:
+        message = f"Erro ao resgatar dados de agendamentos com a especialidade de id {specialty_id} na unidade de id {unity_id}"
+        log = Logging(message)
+        log.warning('select_data_schedule_from_user_id', None, error, 500, {'params': {'specialty_id': specialty_id, 'unity_id': unity_id}})
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
+
+  def check_conflicting_schedule(self, id_unity: int, id_specialty: int, date_schedule: str, init_time: str, end_time: str):
+    """
+      Verificação de conflito de horários entre agendamentos 
+      na mesma unidade e especialidade
+
+        :params id_unity: int
+        :params id_specialty: int
+        :params date_schedule: str
+        :params init_time: str
+        :params end_time: str
+        return -> list
+    """
+    with Connection() as connection:
+      try:
+        query = connection.session.execute(f"""
+            CREATE OR REPLACE FUNCTION busca_agendamentos()
+            RETURNS TABLE (
+                id INTEGER,
+                id_unidade INTEGER,
+                id_especialidade INTEGER,
+                data_agendamento DATE,
+                horario_inicio_agendamento TIME,
+                horario_termino_agendamento TIME
+            ) AS $$
+            DECLARE
+                DIA DATE := '{date_schedule}';
+                DT_INICIO TIME := '{init_time}';
+                DT_FINAL TIME := '{end_time}';
+            BEGIN
+                RETURN QUERY SELECT agen.id, agen.id_unidade, agen.id_especialidade, agen.data_agendamento, agen.horario_inicio_agendamento, agen.horario_termino_agendamento 
+              FROM AGENDAMENTOS agen
+              WHERE (agen.ID_UNIDADE = {id_unity}) AND (agen.ID_ESPECIALIDADE = {id_specialty}) AND (DIA = agen.DATA_AGENDAMENTO) AND
+              ( 
+                ( DT_INICIO <= agen.HORARIO_INICIO_AGENDAMENTO AND DT_FINAL >= agen.HORARIO_INICIO_AGENDAMENTO )
+                OR (DT_INICIO >= agen.HORARIO_INICIO_AGENDAMENTO AND DT_FINAL <= agen.HORARIO_TERMINO_AGENDAMENTO)
+                OR (DT_INICIO < agen.HORARIO_TERMINO_AGENDAMENTO AND DT_FINAL >= agen.HORARIO_TERMINO_AGENDAMENTO)
+                OR (DT_INICIO <= agen.HORARIO_INICIO_AGENDAMENTO AND DT_FINAL >= agen.HORARIO_TERMINO_AGENDAMENTO)
+              );
+            END $$ LANGUAGE plpgsql;
+            SELECT * FROM busca_agendamentos();
+        """);
+        result = query.fetchall();
+        return result;
+
+      except Exception as error:
+        message = f"Ao verificar a existência de conflitos"
+        log = Logging(message)
+        params = {'id_unity': id_unity, 'id_specialty': id_specialty, 'date_schedule': date_schedule, 'init_time': init_time, 'end_time': end_time}
+        log.warning('check_conflicting_schedule', None, error, 500, {'params': {'params': params}})
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )

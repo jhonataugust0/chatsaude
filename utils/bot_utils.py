@@ -24,7 +24,7 @@ def send_message(message: str, number: str):
   except Exception as error:
     message_log = 'Erro ao enviar mensagem para o whatsapp'
     log = Logging(message_log)
-    log.warning('# send_message', None, str(error), 500, {'params': {'message': message, 'number': number}})
+    log.warning('send_message', None, str(error), 500, {'params': {'message': message, 'number': number}})
     raise HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
         detail=message_log

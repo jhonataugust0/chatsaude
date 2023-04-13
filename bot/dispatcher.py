@@ -17,7 +17,7 @@ from utils.validators.validate_email import validate_email
 from utils.validators.validate_times import validate_date
 from utils.validators.validate_cpf import validate_cpf
 from utils.validators.validate_c_sus import validate_cns
-from utils.date import get_more_forty_five
+from utils.date import get_more_forty_five, format_date_for_user, format_time_for_user
 
 class BotOptions:
   REGISTER_USER = '1'
@@ -49,7 +49,7 @@ class BotDispatcher:
 
         if message == BotOptions.SCHEDULE_CONSULT:
           if 'fluxo_agendamento_consulta' in verify_stage_user and (verify_stage_user['fluxo_agendamento_consulta'] == 'None' or int(verify_stage_user['fluxo_agendamento_consulta']) < 1):
-            # send_message(str(Replies.SCHEDULE_CONSULT), f"whatsapp:{str(cellphone)}"), 
+            send_message(str(Replies.SCHEDULE_CONSULT), f"whatsapp:{str(cellphone)}"), 
             return {'schedule_consult_trigger': 1}
 
         elif message == BotOptions.SCHEDULE_EXAM:
@@ -65,7 +65,7 @@ class BotDispatcher:
 
       if message == BotOptions.REGISTER_USER:
         if 'id' not in user_dict:
-          # send_message(str(Replies.INIT_REGISTER_FLOW), f"whatsapp:{str(cellphone)}")
+          send_message(str(Replies.INIT_REGISTER_FLOW), f"whatsapp:{str(cellphone)}")
           return {'register_user_trigger': 1}
         
       else: 
@@ -110,7 +110,7 @@ class BotDispatcher:
               status_code=status.HTTP_200_OK, 
               content="Agendamento de consulta iniciado com sucesso"
           )
-        
+                  
       elif "register_user_trigger" in bot_response and bot_response['register_user_trigger'] == 1:
         pass
       
@@ -143,7 +143,7 @@ class BotDispatcher:
       if int(user_flow['etapa_registro']) == 1:
         user_entity.update_user_data(user['telefone'], 'nome', str(message)) 
         flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
-        # send_message("Digite seu melhor email\nEx:maria.fatima@gmail.com", number_formated)
+        send_message("Digite seu melhor email\nEx:maria.fatima@gmail.com", number_formated)
         return Response(
             status_code=status.HTTP_200_OK, 
             content="Mensagem enviada com sucesso"
@@ -154,7 +154,7 @@ class BotDispatcher:
         if (validate_email(message)):
           user_entity.update_user_data(user['telefone'], 'email', str(message)) 
           flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
-          # send_message("Digite sua data de nascimento\nEx:01/02/2000", number_formated)     
+          send_message("Digite sua data de nascimento\nEx:01/02/2000", number_formated)     
           return Response(
               status_code=status.HTTP_200_OK, 
               content="Mensagem enviada com sucesso"
@@ -162,7 +162,7 @@ class BotDispatcher:
         
         else:
           reply = "Por favor, digite um email válido"
-          # send_message(reply, number_formated)
+          send_message(reply, number_formated)
           raise HTTPException(
               status_code=status.HTTP_400_BAD_REQUEST, 
               detail=reply
@@ -174,11 +174,11 @@ class BotDispatcher:
         if (nescient_date['value']):
           user_entity.update_user_data(user['telefone'], 'data_nascimento', nescient_date['date'])
           flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
-          # send_message("Digite seu CEP\nEx:56378-921", number_formated)            
+          send_message("Digite seu CEP\nEx:56378-921", number_formated)            
         
         else:
           reply = "Por favor, digite uma data válida"
-          # send_message(reply, number_formated)
+          send_message(reply, number_formated)
           raise HTTPException(
               status_code=status.HTTP_400_BAD_REQUEST, 
               detail=reply
@@ -187,7 +187,7 @@ class BotDispatcher:
       elif int(user_flow['etapa_registro']) == 4:
         user_entity.update_user_data(user['telefone'], 'cep', int(message.replace('-','')))
         flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
-        # send_message("Digite seu CPF\nEx:157.934.724-28", number_formated) 
+        send_message("Digite seu CPF\nEx:157.934.724-28", number_formated) 
         return Response(
             status_code=status.HTTP_200_OK, 
             content="Mensagem enviada com sucesso"
@@ -197,7 +197,7 @@ class BotDispatcher:
         if (validate_cpf(message)):
           user_entity.update_user_data(user['telefone'], 'cpf', int(message.replace('.','').replace('-','')))
           flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
-          # send_message("Digite o número do seu RG\nEx:4563912-9", number_formated)
+          send_message("Digite o número do seu RG\nEx:4563912-9", number_formated)
           return Response(
               status_code=status.HTTP_200_OK, 
               content="Mensagem enviada com sucesso"
@@ -205,7 +205,7 @@ class BotDispatcher:
         
         else:
           reply = "Por favor, digite um cpf válido"
-          # send_message(reply, number_formated)
+          send_message(reply, number_formated)
           raise HTTPException(
               status_code=status.HTTP_400_BAD_REQUEST, 
               detail=reply
@@ -214,7 +214,7 @@ class BotDispatcher:
       elif int(user_flow['etapa_registro']) == 6:
         user_entity.update_user_data(user['telefone'], 'rg', int(message.replace('-','')))
         flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
-        # send_message("Digite o número do seu cartão do SUS\nEx:145.000.875.165.186", number_formated) 
+        send_message("Digite o número do seu cartão do SUS\nEx:145.000.875.165.186", number_formated) 
         return Response(
             status_code=status.HTTP_200_OK, 
             content="Mensagem enviada com sucesso"
@@ -224,7 +224,7 @@ class BotDispatcher:
         if (validate_cns(str(message).replace('.','').replace('-',''))):
           user_entity.update_user_data(user['telefone'], 'c_sus', str(message).replace('.','').replace('-',''))
           flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
-          # send_message("Digite o nome do seu bairro\nEx: Benedito Bentes", number_formated) 
+          send_message("Digite o nome do seu bairro\nEx: Benedito Bentes", number_formated) 
           return Response(
               status_code=status.HTTP_200_OK, 
               content="Mensagem enviada com sucesso"
@@ -232,7 +232,7 @@ class BotDispatcher:
         
         else:
           reply = "Por favor, digite um cartão nacional de saúde válido"
-          # send_message(reply, number_formated)
+          send_message(reply, number_formated)
           raise HTTPException(
               status_code=status.HTTP_400_BAD_REQUEST, 
               detail=reply
@@ -245,7 +245,7 @@ class BotDispatcher:
         info = "Usuário cadastrado com êxito"
         log = Logging(info)
         log.info()
-        # send_message("Parabéns, seu cadastro foi concluído, agora você pode agendar consultas ou exames pelo chat!\nDigite qualquer tecla para ver as opções", number_formated) 
+        send_message("Parabéns, seu cadastro foi concluído, agora você pode agendar consultas ou exames pelo chat!\nDigite qualquer tecla para ver as opções", number_formated) 
         return Response(
             status_code=status.HTTP_200_OK, 
             content="Mensagem enviada com sucesso"
@@ -284,14 +284,14 @@ class BotDispatcher:
         
         consult_data = consult_entity.update_schedule_from_id(user['id'], 'id_especialidade', specialty_user_request['id'])
         
-        # send_message("Escolha a unidade suportada mais próxima de você\nDigite o número correspondente ao da unidade desejada\nEx: 1", number_formated)
+        send_message("Escolha a unidade suportada mais próxima de você\nDigite o número correspondente ao da unidade desejada\nEx: 1", number_formated)
         unities = unities_entity.select_all()
-        sleep(0.4)
+        sleep(0.4) # transformar em async await
         
         for i in unities:
           unities_text = f"""Unidade {i['id']}: {i['nome'].split('(')[0]}\nEndereço: {i['endereco'].replace(',','').split('s/n')[0]}\nBairro: {i['bairro']}\nHorario de funcionamento: {i['horario_funcionamento']}"""
           sleep(0.5)
-          # send_message(unities_text, number_formated)
+          send_message(unities_text, number_formated)
         
         return Response(
             status_code=status.HTTP_200_OK, 
@@ -301,9 +301,12 @@ class BotDispatcher:
       elif int(user_flow['etapa_agendamento_consulta']) == 2:
         user_flow = flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
         consult_data = consult_entity.update_schedule_from_user_id(user['id'], 'id_unidade', int(message))
-        
+        last_time = consult_entity.get_last_time_scheduele_from_specialty_id(int(consult_data['id_especialidade']), int(consult_data['id_unidade']))
         if consult_data['id_unidade'] != 'None':
-          # send_message("Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023", number_formated)
+          data = format_date_for_user(str(last_time['data_agendamento']))
+          hora = format_time_for_user(last_time['horario_termino_agendamento']) 
+          atencao = f"Atenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}"
+          send_message(f"Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023", number_formated)
           return Response(
               status_code=status.HTTP_200_OK, 
               content="Mensagem enviada com sucesso"
@@ -315,7 +318,7 @@ class BotDispatcher:
         if (date['value']):
           user_flow = flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
           consult_entity.update_schedule_from_user_id(user['id'], 'data_agendamento', date['date'])
-          # send_message("Digite o horário que deseja realizar a consulta (atente-se para o horário estar dentro do período de funcionamento da unidade escolhida)\nEx: 08:00", number_formated)
+          send_message("Digite o horário que deseja realizar a consulta (atente-se para o horário estar dentro do período de funcionamento da unidade escolhida)\nEx: 08:00", number_formated)
           return Response(
               status_code=status.HTTP_200_OK, 
               content="Mensagem enviada com sucesso"
@@ -323,7 +326,7 @@ class BotDispatcher:
         
         else:
           reply = "Por favor, digite uma hora válida"
-          # send_message(reply, number_formated)
+          send_message(reply, number_formated)
           raise HTTPException(
               status_code=status.HTTP_400_BAD_REQUEST, 
               detail=reply
@@ -334,7 +337,7 @@ class BotDispatcher:
         final_schedule = get_more_forty_five(str(message))
         consult_data = consult_entity.update_schedule_from_user_id(user['id'], 'horario_inicio_agendamento', str(message))
         consult_data = consult_entity.update_schedule_from_user_id(user['id'], 'horario_termino_agendamento', final_schedule)
-        # send_message("(Opcional) Digite uma mensagem descrevendo qual a sua necessidade para a especialidade escolhida.\nEx: Exame de rotina\nVocê pode digitar qualquer coisa para ignorar essa etapa)", number_formated)
+        send_message("(Opcional) Digite uma mensagem descrevendo qual a sua necessidade para a especialidade escolhida.\nEx: Exame de rotina\nVocê pode digitar qualquer coisa para ignorar essa etapa)", number_formated)
         return Response(
             status_code=status.HTTP_200_OK, 
             content="Mensagem enviada com sucesso"
@@ -345,8 +348,8 @@ class BotDispatcher:
         user_flow = flow_entity.update_flow_from_user_id(user['id'], 'fluxo_agendamento_consulta', 0)
         consult_data = consult_entity.update_schedule_from_user_id(user['id'], 'descricao_necessidade', str(message))
         all_data = consult_entity.select_all_data_from_schedule_with_id(consult_data['id'])
-        # send_message(f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {all_data['data_agendamento']} as {all_data['horario_inicio_agendamento']} horas para a sua consulta com o {all_data['specialty_info']['nome']}", number_formated)
-        # send_message(f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade escolhida no dia {consult_data['data_agendamento']} as {consult_data['horario_inicio_agendamento']} horas.", number_formated)
+        send_message(f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {all_data['data_agendamento']} as {all_data['horario_inicio_agendamento']} horas para a sua consulta com o {all_data['specialty_info']['nome']}", number_formated)
+        send_message(f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade escolhida no dia {consult_data['data_agendamento']} as {consult_data['horario_inicio_agendamento']} horas.", number_formated)
         return Response(
             status_code=status.HTTP_200_OK, 
             content="Mensagem enviada com sucesso"
