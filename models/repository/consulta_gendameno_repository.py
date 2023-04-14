@@ -2,6 +2,7 @@ from fastapi import HTTPException, status, Response
 
 from ..configs.connection import Connection
 from ..entities.agendamentos_model import Agendamentos
+from ..entities.user_model import Usuario
 from ..repository.especialidade_repository import EspecialidadeRepository
 from ..repository.unidade_repository import UnidadeRepository
 from log.logging import Logging
@@ -89,6 +90,38 @@ class AgendamentosRepository:
         message = f"Erro ao resgatar dados de agendamento do usuário {id['id']}"
         log = Logging(message)
         log.warning('select_data_schedule_from_user_id', None, error, 500, {'params': {'id': id}})
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=message
+        )
+
+  def select_data_schedule_from_user_cellphone(self, cellphone: int):
+    """
+      Busca no banco de dados a linha de dados do agendamento 
+      pertencente ao usuário informado
+
+        :params user_id: int 
+      return dict
+    """
+    with Connection() as connection:
+      try:
+        data = connection.session.query(Agendamentos, Usuario).filter(
+          Agendamentos.id_usuario == Usuario.id).filter(
+          Usuario.telefone == cellphone).order_by(
+          Agendamentos.id.desc()).first()
+        schedule_dict = Agendamentos.as_dict(data[0])
+        return schedule_dict
+
+      except NoResultFound:
+        message = f"Não foi possível encontrar agendamentos relacionados ao usuário de telefone {cellphone}"
+        log = Logging(message)
+        log.info()
+        return {} 
+
+      except Exception as error:
+        message = f"Erro ao resgatar dados de agendamento do usuário de telefone {cellphone}"
+        log = Logging(message)
+        log.warning('select_data_schedule_from_user_id', None, error, 500, {'params': {'cellphone': cellphone}})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=message
@@ -271,7 +304,7 @@ class AgendamentosRepository:
             END $$ LANGUAGE plpgsql;
             SELECT * FROM busca_agendamentos();
         """);
-        result = query.fetchall();
+        result = query.fetchall()
         return result;
 
       except Exception as error:

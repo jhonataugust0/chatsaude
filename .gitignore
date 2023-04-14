@@ -1,5 +1,7 @@
+*.pyc
+*.cpython
+*.cpython.pyc
 __pychache__
 .pytest_cache
 .venv
 .env
-*.pyc

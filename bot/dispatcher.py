@@ -305,8 +305,7 @@ class BotDispatcher:
         if consult_data['id_unidade'] != 'None':
           data = format_date_for_user(str(last_time['data_agendamento']))
           hora = format_time_for_user(last_time['horario_termino_agendamento']) 
-          atencao = f"Atenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}"
-          send_message(f"Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023", number_formated)
+          send_message(f"""Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023\nAtenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}""", number_formated)
           return Response(
               status_code=status.HTTP_200_OK, 
               content="Mensagem enviada com sucesso"
@@ -333,15 +332,30 @@ class BotDispatcher:
           )
       
       elif int(user_flow['etapa_agendamento_consulta']) == 4:
-        user_flow = flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
-        final_schedule = get_more_forty_five(str(message))
-        consult_data = consult_entity.update_schedule_from_user_id(user['id'], 'horario_inicio_agendamento', str(message))
-        consult_data = consult_entity.update_schedule_from_user_id(user['id'], 'horario_termino_agendamento', final_schedule)
-        send_message("(Opcional) Digite uma mensagem descrevendo qual a sua necessidade para a especialidade escolhida.\nEx: Exame de rotina\nVocê pode digitar qualquer coisa para ignorar essa etapa)", number_formated)
-        return Response(
-            status_code=status.HTTP_200_OK, 
-            content="Mensagem enviada com sucesso"
+        data_schedule = consult_entity.select_data_schedule_from_user_cellphone(int(user['telefone']))
+        conflict = consult_entity.check_conflicting_schedule(
+            data_schedule['id_unidade'], 
+            data_schedule['id_especialidade'], 
+            data_schedule['data_agendamento'], 
+            str(message) + ":00", # horario_inicio_agendamento
+            get_more_forty_five(message) # horario_termino_agendamento
         )
+        if len(conflict) > 0:
+          send_message("Desculpe, esse horário está indisponível, por favor, informe um horário no mínimo superior ao informado anteriormente", number_formated)
+          return Response(
+              status_code=status.HTTP_200_OK, 
+              content="Mensagem enviada com sucesso"
+          )
+        else:
+          user_flow = flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
+          final_schedule = get_more_forty_five(str(message))
+          consult_data = consult_entity.update_schedule_from_user_id(user['id'], 'horario_inicio_agendamento', str(message))
+          consult_data = consult_entity.update_schedule_from_user_id(user['id'], 'horario_termino_agendamento', final_schedule)
+          send_message("(Opcional) Digite uma mensagem descrevendo qual a sua necessidade para a especialidade escolhida.\nEx: Exame de rotina\nVocê pode digitar qualquer coisa para ignorar essa etapa)", number_formated)
+          return Response(
+              status_code=status.HTTP_200_OK, 
+              content="Mensagem enviada com sucesso"
+          )
       
       elif int(user_flow['etapa_agendamento_consulta']) == 5:
         user_flow = flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', 0)
