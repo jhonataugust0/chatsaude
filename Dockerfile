@@ -1,8 +1,7 @@
-# https://hub.docker.com/_/python
 FROM python:3.9.16-slim
 
 ENV PYTHONUNBUFFERED True
-ENV APP_HOME /app
+ENV APP_HOME /api
 ENV TZ='America/Sao_Paulo'
 
 WORKDIR $APP_HOME
