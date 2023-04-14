@@ -40,8 +40,7 @@ class UnidadeRepository:
     with Connection() as connection:
       try:
         data = connection.session.query(Unidade).filter(Unidade.id == unity_id).one()
-        unity = str(data).replace(' ', '').split(',')
-        unity = dict(i.split("=") for i in unity)
+        unity = Unidade.as_dict(data)
         return unity   
 
       except NoResultFound:

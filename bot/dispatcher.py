@@ -14,7 +14,7 @@ from models.repository.unidade_repository import UnidadeRepository
 
 from utils.bot_utils import send_message
 from utils.validators.validate_email import validate_email
-from utils.validators.validate_times import validate_date
+from utils.validators.validate_times import validate_nascent_date, validate_date_schedule
 from utils.validators.validate_cpf import validate_cpf
 from utils.validators.validate_c_sus import validate_cns
 from utils.date import get_more_forty_five, format_date_for_user, format_time_for_user
@@ -170,7 +170,7 @@ class BotDispatcher:
       
       elif int(user_flow['etapa_registro']) == 3: 
         
-        nescient_date = validate_date(message) 
+        nescient_date = validate_nascent_date(message) 
         if (nescient_date['value']):
           user_entity.update_user_data(user['telefone'], 'data_nascimento', nescient_date['date'])
           flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
@@ -313,7 +313,7 @@ class BotDispatcher:
       
       elif int(user_flow['etapa_agendamento_consulta']) == 3:
         
-        date = validate_date(message) 
+        date = validate_date_schedule(message) 
         if (date['value']):
           user_flow = flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
           consult_entity.update_schedule_from_user_id(user['id'], 'data_agendamento', date['date'])
@@ -324,7 +324,7 @@ class BotDispatcher:
           )
         
         else:
-          reply = "Por favor, digite uma hora válida"
+          reply = "Por favor, digite uma data válida"
           send_message(reply, number_formated)
           raise HTTPException(
               status_code=status.HTTP_400_BAD_REQUEST, 
@@ -362,8 +362,7 @@ class BotDispatcher:
         user_flow = flow_entity.update_flow_from_user_id(user['id'], 'fluxo_agendamento_consulta', 0)
         consult_data = consult_entity.update_schedule_from_user_id(user['id'], 'descricao_necessidade', str(message))
         all_data = consult_entity.select_all_data_from_schedule_with_id(consult_data['id'])
-        send_message(f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {all_data['data_agendamento']} as {all_data['horario_inicio_agendamento']} horas para a sua consulta com o {all_data['specialty_info']['nome']}", number_formated)
-        send_message(f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade escolhida no dia {consult_data['data_agendamento']} as {consult_data['horario_inicio_agendamento']} horas.", number_formated)
+        send_message(f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {format_date_for_user(all_data['data_agendamento'])} as {format_time_for_user(all_data['horario_inicio_agendamento'])} horas para a sua consulta com o {all_data['specialty_info']['nome']}", number_formated)
         return Response(
             status_code=status.HTTP_200_OK, 
             content="Mensagem enviada com sucesso"

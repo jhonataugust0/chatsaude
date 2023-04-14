@@ -21,4 +21,7 @@ class Unidade(Base):
 
     def __str__(self):
       return f"""id = {int(self.id)}, nome = {str(self.nome)}, endereco = {str(self.endereco)}, bairro = {str(self.bairro)}, cidade = {str(self.cidade)}, estado = {str(self.estado)}, horario_funcionamento = {str(self.horario_funcionamento)}, contato = {str(self.contato)}, cep = {int(self.cep)}"""
-      
+    
+    @classmethod
+    def as_dict(cls, row):
+        return {c.name: getattr(row, c.name) for c in row.__table__.columns}

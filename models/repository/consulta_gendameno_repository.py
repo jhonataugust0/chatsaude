@@ -67,12 +67,12 @@ class AgendamentosRepository:
   def select_all_data_from_schedule_with_id(self, id: int):
     with Connection() as connection:
       try:
-        data = connection.session.query(Agendamentos).filter(Agendamentos.id_usuario == id).one()
+        data = connection.session.query(Agendamentos).filter(Agendamentos.id == id).one()
         schedule_data = str(data).replace(' ', '').split(',')
         schedule_data = dict(i.split("=") for i in schedule_data)
         
         unity_entity = UnidadeRepository()
-        data_unity = unity_entity.select_unity_from_id(schedule_data['id'])
+        data_unity = unity_entity.select_unity_from_id(int(schedule_data['id_unidade']))
         schedule_data['unity_info'] = data_unity
 
         specialty_entity = EspecialidadeRepository()

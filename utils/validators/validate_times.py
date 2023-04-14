@@ -3,7 +3,7 @@ import pytz
 from log.logging import Logging
 from fastapi import HTTPException, status
 
-def validate_date(date: str):
+def validate_nascent_date(date: str):
   """
     Verifica a existência de uma data informada e a valida
 
@@ -56,3 +56,28 @@ def validate_date(date: str):
           detail=message_log
       )
 
+
+def validate_date_schedule(date_schedule):
+  try:
+      current_date = datetime.datetime.now(pytz.timezone("America/Sao_Paulo"))
+      current_date = datetime.datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
+      current_date = current_date.split(' ')[0]
+
+      parse_informed_date = date_schedule.split('/')
+      parse_informed_date = f"{parse_informed_date[2]}-{parse_informed_date[1]}-{parse_informed_date[0]}"
+      date_informed = datetime.datetime.strptime(parse_informed_date,"%Y-%m-%d")
+      date_informed = datetime.datetime.strftime(date_informed,"%Y-%m-%d")
+      
+      if date_informed >= current_date:
+        return {'date': date_informed, 'value': True}
+      
+      else:
+        return {'date': date_informed, 'value': False}
+  except Exception as error:
+    message_log = f'Erro ao validar a data {date_schedule}'
+    log = Logging(message_log)
+    log.warning('validate_email', None, str(error), 500, {'params': {'date_schedule': date_schedule}})
+    raise HTTPException(
+          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+          detail=message_log
+      )
