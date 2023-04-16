@@ -24,7 +24,7 @@ class UserRepository:
         message = f"Não foi possível resgatar os usuários"
         log = Logging(message)
         log.info()
-        return None
+        return {}
       
       except Exception as error:
         message = "Erro ao resgatar os dados dos usuários"
@@ -51,9 +51,8 @@ class UserRepository:
  
       except NoResultFound:
         message = f"Não foi possível resgatar o usuário de telefone {cellphone}"
-        log = Logging(message)
-        log.info()
-        return None
+        log = Logging(message).info()
+        return {}
 
       except Exception as error:
         message = "Erro ao resgatar os dados do usuário"
@@ -114,7 +113,7 @@ class UserRepository:
         message = f"Não foi possível resgatar o usuário de telefone {telefone}"
         log = Logging(message)
         log.info()
-        return None
+        return {}
       
       except Exception as error:
         message = "Erro ao atualizar um fluxo existente no banco de dados"
@@ -139,7 +138,7 @@ class UserRepository:
           message = f"Não foi possível encontrar o usuário com nome {cellphone}"
           log = Logging(message)
           log.info()
-          return None
+          return {}
         
         except Exception as error:
           message = f"Erro ao excluir o usuário com nome {cellphone}"

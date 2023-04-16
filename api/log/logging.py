@@ -19,7 +19,7 @@ class Logging:
         self.logger.addHandler(handler)
 
     def info(self):
-      self.logger.info()
+      self.logger.info(self.name)
 
     def warning(self, function, user, error, status, parametros=None):
       current_hour = datetime.datetime.strftime(datetime.datetime.now(pytz.timezone("America/Sao_Paulo")), "%d-%m-%y %H:%M").replace('-','/')

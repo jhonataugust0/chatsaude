@@ -85,20 +85,20 @@ class Bot():
             if int(user_stage['fluxo_agendamento_consulta']) == 1 or int(user_stage['etapa_agendamento_consulta']) == 1:
             
               if (bot_response['message'] != BotOptions.LIST_UNITIES and bot_response['message'] != BotOptions.MAKE_REPORT and bot_response['message'] != BotOptions.REGISTER_USER and bot_response['message'] != BotOptions.SCHEDULE_CONSULT and bot_response['message'] != BotOptions.SCHEDULE_EXAM and bot_response['message'] != Replies.DEFAULT):
-                send_message(bot_response['message'], number_formated)
+                await send_message(bot_response['message'], number_formated)
                 return Response(
                     status_code=status.HTTP_200_OK, 
                     content="mensagem enviada"
                 )
             else:
-              send_message(bot_response['message'], number_formated)
+              await send_message(bot_response['message'], number_formated)
               return Response(
                   status_code=status.HTTP_200_OK, 
                   content="mensagem enviada"
               )
         
         else:
-          send_message(bot_response['message'], number_formated)
+          await send_message(bot_response['message'], number_formated)
           return Response(
               status_code=status.HTTP_200_OK, 
               content="mensagem enviada"
