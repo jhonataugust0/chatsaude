@@ -50,8 +50,8 @@ class Bot():
       bot_response = ''
       
       user = await user_entity.select_user_from_cellphone(int(number))
-      bot_response = dispatcher.message_processor(message, int(number), user)
-      dispatcher.trigger_processing(bot_response, number, user)
+      bot_response = await dispatcher.message_processor(message, int(number), user)
+      await dispatcher.trigger_processing(bot_response, number, user)
       
     except Exception as error:
       message_log = 'Erro ao tratar a mensagem recebida'
@@ -66,7 +66,7 @@ class Bot():
       
       if 'telefone' in user:
         stage_entity = FluxoEtapaRepository()
-        user_stage = stage_entity.select_stage_from_user_id(int(user['id']))
+        user_stage = await stage_entity.select_stage_from_user_id(int(user['id']))
 
         if user_stage and int(user_stage['fluxo_registro']) == 1:
           dispatcher.data_users_update_flow(user, message)

@@ -1,23 +1,30 @@
 from fastapi import HTTPException, status, Response
 
 from api.log.logging import Logging
+from api.models.entities.unidade_model import Unidade
 from ..configs.connection import Connection
 from ..entities.unidade_model import Unidade
 from sqlalchemy.orm.exc import NoResultFound 
 
+from sqlalchemy import select, MetaData, update, delete
+
+from typing import List, Optional, Dict, Any
+
 class UnidadeRepository:
 
-  def select_all(self):
-    with Connection() as connection:
+  async def select_all(self) -> List[Dict[str, Unidade]] | None:
+    async with Connection() as connection:
       try:
-        data = connection.session.query(Unidade).order_by(Unidade.id).all()
-        data_unity = [u.__dict__ for u in data]
-
+        query = select(Unidade)
+        result = await connection.execute(query)
+        rows = result.fetchall()
+        return [await Unidade.as_dict(row) for row in rows]
+      
       except NoResultFound:
         message = f"Não foi possível resgatar as unidades"
         log = Logging(message)
         log.info()
-        return {}
+        return None
         
       except Exception as error:
         message = "Erro ao resgatar as unidades"
@@ -27,27 +34,29 @@ class UnidadeRepository:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=message
         )
-      return data_unity
+      
+      finally:
+        await connection.close()
 
-  def select_unity_from_id(self, unity_id):
+  async def select_unity_from_id(self, unity_id) -> Dict[str, Unidade] | None:
     """
       Busca no banco de dados a linha de dados da unidade do
       id informado
 
       :params unity_id: int 
-    return dict
     """
-    with Connection() as connection:
+    async with Connection() as connection:
       try:
-        data = connection.session.query(Unidade).filter(Unidade.id == unity_id).one()
-        unity = Unidade.as_dict(data)
-        return unity   
+        query = select(Unidade).where(Unidade.id == unity_id)
+        result = await connection.execute(query)
+        user_dict = await Unidade.as_dict(result.scalar_one())
+        return user_dict   
 
       except NoResultFound:
         message = f"Não foi possível encontrar a unidade {unity_id}"
         log = Logging(message)
         log.info()
-        return {}
+        return None
 
       except Exception as error:
         message = f"Erro ao resgatar dados da unidade {unity_id}"
@@ -57,8 +66,11 @@ class UnidadeRepository:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=message
         )
+      
+      finally:
+        await connection.close()
 
-  def select_unity_from_district(self, district):
+  async def select_unity_from_district(self, district) -> Dict[str, Unidade] | None:
     """
       Busca no banco de dados as unidades correspondentes ao
       bairro informado
@@ -66,21 +78,18 @@ class UnidadeRepository:
       :params district: str 
       return dict
     """
-    with Connection() as connection:
+    async with Connection() as connection:
       try:
-        data = connection.session.query(Unidade).filter(Unidade.bairro == district).all()
-        
-        data_unity = list()
-        for i in range(0, len(data)):
-          columns = ['id', 'nome', 'endereco', 'bairro', 'cidade', 'estado', 'cep', 'horario_funcionamento', 'contato']
-          value = list(str(data[i]))
-          data_unity.append({columns[j]: value[j] for j in range(0, len(columns))})
-
+        query = select(Unidade).where(Unidade.bairro == district)
+        result = await connection.execute(query)
+        user_dict = await Unidade.as_dict(result.scalar_one())
+        return user_dict    
+       
       except NoResultFound:
         message = f"Não foi possível encontrar a unidade do bairro {district}"
         log = Logging(message)
         log.info()
-        return {}
+        return None
 
       except Exception as error:
         message = f"Erro ao resgatar dados da unidade {district}"
@@ -90,21 +99,24 @@ class UnidadeRepository:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=message
         )
+      
+      finally:
+        await connection.close()
 
-  def insert_new_unity(self, name: str):
+  async def insert_new_unity(self, name: str) -> Dict[str, Unidade] | None:
     """
       Inserta uma nova linha na tabela de unidades  
         :params name: str
       return dict
     """
-    with Connection() as connection:
+    async with Connection() as connection:
       try:
-        data_insert = Unidade(nome = name)
-        connection.session.add(data_insert)
-        connection.session.commit()
-        schedule = str(data_insert).replace(' ', '').split(',')
-        schedule = dict(i.split("=") for i in schedule)
-        return schedule
+        query = Unidade(nome = name)
+        connection.add(query)
+        await connection.flush()
+        unity_dict = await connection.execute(select(Unidade).where(Unidade.id == query.id)).first()
+        user_dict = Unidade.as_dict(user_dict)
+        return user_dict
       
       except Exception as error:
         message = "Erro ao inserir um novo agendamento no banco de dados"
@@ -115,7 +127,10 @@ class UnidadeRepository:
             detail=message
         )
 
-  def update_unity_from_id(self, unity_id: int, table: str, input_data: int):
+      finally:
+          await connection.close()
+
+  async def update_unity_from_id(self, unity_id: int, table: str, input_data: int) -> Dict[str, Unidade] | None:
     """
       Atualiza uma coluna no banco de dados baseado no id do
       usuário informado
@@ -124,11 +139,19 @@ class UnidadeRepository:
       :params table: str
       :params input_data: int
     """
-    with Connection() as connection:
+    async with Connection() as connection:
       try:
-        data_update = connection.session.query(Unidade).filter(Unidade.id == unity_id).update({ table: input_data})
-        connection.session.commit()
-        return data_update  
+        query = update(Unidade).where(Unidade.id == unity_id).values({ table: input_data})
+        result = await connection.execute(query)
+        await connection.commit()
+        unity_dict = await Unidade.as_dict(result.fetchone())
+        return unity_dict 
+      
+      except NoResultFound:
+        message = f"Não foi possível resgatar a unidade de id {unity_id}"
+        log = Logging(message)
+        log.info()
+        return None
       
       except Exception as error:
         message = "Erro ao atualizar os dados da unidade"
@@ -139,23 +162,27 @@ class UnidadeRepository:
             detail=message
         )
 
-  def delete_unity_from_id(self, unity_id: int):
+      finally:
+          await connection.close()
+
+  async def delete_unity_from_id(self, unity_id: int) -> bool | None:
     """
       Delete uma linha da tabela agendamentos baseado no id 
       do usuário informado
 
       params: unity_id: int
     """
-    with Connection() as connection:
+    async with Connection() as connection:
       try:
-        connection.session.query(Unidade).filter(Unidade.id == unity_id).delete()
-        connection.session.commit()
-        
+        await connection.execute(Unidade.delete().where(Unidade.id == unity_id))
+        await connection.commit()
+        return True
+
       except NoResultFound:
         message = f"Não foi possível encontrar fluxos relacionados ao usuário {unity_id}"
         log = Logging(message)
         log.info()
-        return {} 
+        return None 
  
       except Exception as error:
         message = f"Erro ao excluir o agendamento do usuário {unity_id}"
@@ -166,5 +193,5 @@ class UnidadeRepository:
             detail=message
         )
 
-
-
+      finally:
+          await connection.close()

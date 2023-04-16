@@ -5,25 +5,29 @@ from ..entities.fluxo_etapa_model import FluxoEtapa
 from api.log.logging import Logging
 from sqlalchemy.orm.exc import NoResultFound 
 
+from sqlalchemy import select, MetaData, update, delete
+
+from typing import List, Optional, Dict, Any
+
 class FluxoEtapaRepository:
 
-  def select_all(self):
+  async def select_all(self) -> List[Dict[str, FluxoEtapa]]:
     """
       Resgata todas as linhas da tabela fluxo_etapa
       return dict
     """
-    with Connection() as connection:
+    async with Connection() as connection:
       try:
-        data = connection.session.query(FluxoEtapa).all()
-        stage = str(data).replace(' ', '').split(',')
-        stage = dict(i.split("=") for i in stage)
-        return stage 
+        query = select(FluxoEtapa)
+        result = await connection.execute(query)
+        rows = result.fetchall()
+        return [await FluxoEtapa.as_dict(row) for row in rows]
      
       except NoResultFound:
         message = f"Não foi possível resgatar os fluxos"
         log = Logging(message)
         log.info()
-        return {}
+        return None
       
       except Exception as error:
         message = "Erro ao resgatar todos os fluxos"
@@ -34,22 +38,24 @@ class FluxoEtapaRepository:
             detail=message
         )
       
-  def select_stage_from_user_id(self, user_id: int):
+      finally:
+        await connection.close()
+
+  async def select_stage_from_user_id(self, user_id: int) -> Dict[str, FluxoEtapa]:
     """
       Busca no banco de dados a linha de fluxo correspondente 
       ao usuário informado
 
       :params user_id: int 
-      return dict
     """
 
-    with Connection() as connection:
+    async with Connection() as connection:
      
       try:
-        data = connection.session.query(FluxoEtapa).filter(FluxoEtapa.id_usuario == user_id).one()
-        stage = str(data).replace(' ', '').split(',')
-        stage = dict(i.split("=") for i in stage)
-        return stage   
+        query = select(FluxoEtapa).where(FluxoEtapa.id_usuario == user_id)
+        result = await connection.execute(query)
+        stage_dict = await FluxoEtapa.as_dict(result.scalar_one())
+        return stage_dict   
       
       except NoResultFound as error:
         message = f"Não foi possível encontrar fluxos relacionados ao usuário {user_id}"
@@ -65,22 +71,25 @@ class FluxoEtapaRepository:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=message
         )
-  
-  def insert_new_user_flow(self, user_id: int, flow: int, status: int):
+      
+      finally:
+        await connection.close()
+
+  async def insert_new_user_flow(self, user_id: int, flow: int, status: int) -> Dict[str, FluxoEtapa]:
     """
       Inserta uma nova linha na tabela de fluxos 
         :params user_id: int - id do usuário
         :params flow: int - estado da coluna 
         :params status: int - valor de etapa da coluna
     """
-    with Connection() as connection:
+    async with Connection() as connection:
       try:
-        data_insert = FluxoEtapa(id_usuario = user_id, fluxo_registro = flow, etapa_registro = status, fluxo_agendamento_consulta = 0, etapa_agendamento_consulta = 0, fluxo_agendamento_exame = 0, etapa_agendamento_exame = 0, lista_unidades = 0, fluxo_denuncia = 0)
-        connection.session.add(data_insert)
-        connection.session.commit()
-        stage = str(data_insert).replace(' ', '').split(',')
-        stage = dict(i.split("=") for i in stage)
-        return stage
+        query = FluxoEtapa(id_usuario = user_id, fluxo_registro = flow, etapa_registro = status, fluxo_agendamento_consulta = 0, etapa_agendamento_consulta = 0, fluxo_agendamento_exame = 0, etapa_agendamento_exame = 0, lista_unidades = 0, fluxo_denuncia = 0)
+        connection.add(query)
+        await connection.flush()
+        flow_dict = await connection.execute(select(FluxoEtapa).where(FluxoEtapa.id == query.id)).first()
+        flow_dict = FluxoEtapa.as_dict(flow_dict)
+        return flow_dict
       
       except Exception as error:
         message = "Erro ao inserir um novo fluxo no banco de dados"
@@ -91,28 +100,10 @@ class FluxoEtapaRepository:
             detail=message
         )
 
-  # def insert_new_schedule_consult_flow(self, user_id: int, flow: int, status: int):
-  #   """
-  #     Inserta uma nova linha na tabela de fluxos - agendamento de consulta
-  #       :params coluna_fluxo: str - nome da coluna de fluxo
-  #       :params flow: int - estado da coluna 
-  #       :params status: int - valor de etapa da coluna
-  #   """
-  #   with Connection() as connection:
-  #     try:
-  #       data_insert = FluxoEtapa(id_usuario = user_id, fluxo_agendamento_consulta = flow, etapa_agendamento_consulta = status)
-  #       connection.session.add(data_insert)
-  #       connection.session.commit()
-  #       stage = str(data_insert).replace(' ', '').split(',')
-  #       stage = dict(i.split("=") for i in stage)
-  #       return stage
-  #     except Exception as error:
-  #       message = "Erro ao inserir um novo fluxo no banco de dados"
-  #       log = Logging(message)
-  #       log.warning('insert_new_schedule_consult_flow', None, error, 500, {'params': {'flow': flow, 'status': status}})
-  #     return {}
+      finally:
+        await connection.close()
 
-  def update_flow_from_user_id(self, id_usuario: int, table: str, input_data: int):
+  async def update_flow_from_user_id(self, id_usuario: int, table: str, input_data: int) -> Dict[str, FluxoEtapa]:
     """
       Atualiza uma coluna no banco de dados baseado no id do
       usuário informado
@@ -121,17 +112,17 @@ class FluxoEtapaRepository:
       :params table: str
       :params input_data: int
     """
-    with Connection() as connection:
+    async with Connection() as connection:
      
       try:
-        connection.session.query(FluxoEtapa).filter(FluxoEtapa.id_usuario == id_usuario).update({ table: input_data})
+        query = update(FluxoEtapa).where(FluxoEtapa.id_usuario == id_usuario).values({ table: input_data})
         connection.session.commit()
         
-        stage = connection.session.query(FluxoEtapa).filter(FluxoEtapa.id_usuario == id_usuario).one()
-        stage = str(stage).replace(' ', '').split(',')
-        data_stage = dict(i.split("=") for i in stage)
-
-        return data_stage  
+        query = connection.session.query(FluxoEtapa).filter(FluxoEtapa.id_usuario == id_usuario).one()
+        result = await connection.execute(query)
+        await connection.commit()
+        flow_dict = await FluxoEtapa.as_dict(result.fetchone())
+        return flow_dict 
       
       except Exception as error:
         message = "Erro ao atualizar os dados do usuário"
@@ -141,25 +132,28 @@ class FluxoEtapaRepository:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=message
         )
+
+      finally:
+        await connection.close()
   
-  
-  def delete_flow_from_user_id(self, user_id: int):
+  async def delete_flow_from_user_id(self, user_id: int) -> bool | None:
     """
       Delete uma linha da tabela fluxo_etapa baseado no id 
       informado
 
       params: user_id: int
     """
-    with Connection() as connection:
+    async with Connection() as connection:
       try:
-        connection.session.query(FluxoEtapa).filter(FluxoEtapa.id == user_id).delete()
-        connection.session.commit()
-        
+        await connection.execute(FluxoEtapa.delete()).where(FluxoEtapa.id == user_id)
+        await connection.commit()
+        return True
+      
       except NoResultFound:
         message = f"Não foi possível encontrar fluxos relacionados ao usuário {user_id}"
         log = Logging(message)
         log.info()
-        return {}
+        return None
  
       except Exception as error:
         message = f"Erro ao excluir o agendamento do usuário {user_id}"
@@ -170,3 +164,5 @@ class FluxoEtapaRepository:
             detail=message
         )
 
+      finally:
+        await connection.close()

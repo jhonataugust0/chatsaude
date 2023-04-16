@@ -12,7 +12,7 @@ from typing import List, Optional, Dict, Any
 
 class UserRepository:
           
-  async def select_all(self) -> List[Dict[str, Any]]:
+  async def select_all(self) -> List[Dict[str, Usuario]] | None:
     async with Connection() as connection:
       try:
         query = select(Usuario)
@@ -24,7 +24,7 @@ class UserRepository:
         message = f"Não foi possível resgatar os usuários"
         log = Logging(message)
         log.info()
-        return {}
+        return None
       
       except Exception as error:
         message = "Erro ao resgatar os dados dos usuários"
@@ -37,7 +37,7 @@ class UserRepository:
       finally:
         await connection.close()
 
-  async def select_user_from_cellphone(self, cellphone) -> Dict[str, Usuario]:
+  async def select_user_from_cellphone(self, cellphone) -> Dict[str, Usuario] | None:
     """
       Busca no banco a linha de dados do usuário informado
         :params cellphone: int 
@@ -76,8 +76,9 @@ class UserRepository:
       try:
         query = Usuario(telefone=telefone)
         connection.add(query)
-        await connection.commit()
-        user_dict = await Usuario.as_dict(query)
+        await connection.flush()  # Insere a linha no banco imediatamente
+        user_dict = await connection.execute(select(Usuario).where(Usuario.id == query.id)).first()
+        user_dict = Usuario.as_dict(user_dict)
         return user_dict
         
       except Exception as error:
@@ -92,7 +93,7 @@ class UserRepository:
       finally:
           await connection.close()
   
-  async def update_user_data(self, telefone, table, input_data) -> Dict[str, Usuario]:
+  async def update_user_data(self, telefone, table, input_data) -> Dict[str, Usuario] | None:
     """
       Atualiza uma coluna no banco de dados baseado no id do
       usuário informado
@@ -127,17 +128,18 @@ class UserRepository:
       finally:
           await connection.close()
 
-  async def delete(self, cellphone):
+  async def delete(self, cellphone) -> bool | None:
     async with Connection() as connection:
         try:
           await connection.execute(Usuario.delete().where(Usuario.telefone == cellphone))
           await connection.commit()
+          return True
         
         except NoResultFound:
           message = f"Não foi possível encontrar o usuário com nome {cellphone}"
           log = Logging(message)
           log.info()
-          return {'message': message, 'value': None}
+          return None
         
         except Exception as error:
           message = f"Erro ao excluir o usuário com nome {cellphone}"
@@ -150,6 +152,3 @@ class UserRepository:
         
         finally:
           await connection.close()
-
-
-
