@@ -1,45 +1,27 @@
+import os
 import sys
 import logging
 import datetime
 import pytz
 
-class Logging():
-  filename = './log/log.txt'
-  filemode = "a"
-  format = """####### %(levelname)s ####### \nDATA: %(asctime)s \n%(message)s\n"""
-  datefmt = '%d/%m/%y %H:%M:%S'
+class Logging:
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
-  def __init__(self, message):
-    self.message = message
+    def __init__(self, name):
+        self.name = name
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(logging.DEBUG)
+        log_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'log', 'log.txt'))
+        console_handler = logging.StreamHandler()
+        handler = logging.FileHandler(log_path)
+        formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
 
-  def config(self):
-    logging.basicConfig(
-      filename=Logging.filename,
-      filemode=Logging.filemode,
-      format=Logging.format,
-      datefmt=Logging.datefmt,
-      level=logging.INFO
-    )
+    def info(self):
+      self.logger.info()
 
-  def info(self):
-    self.config()
-    logger = logging.getLogger()
-    
-    if (logger.hasHandlers()):
-        logger.handlers.clear()
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    
-    mensagem = f""" \nINFO: {self.message}"""
-    logger.info(mensagem) 
-
-  def warning(self, function, user, error, status, parametros=None):
-    self.config()
-    logger = logging.getLogger()
-    
-    if (logger.hasHandlers()):
-        logger.handlers.clear()
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    
-    current_hour = datetime.datetime.strftime(datetime.datetime.now(pytz.timezone("America/Sao_Paulo")), "%d-%m-%y %H:%M").replace('-','/')
-    mensagem = f"""\n####### ERRO #######\nHORA: {current_hour}\nFUNCAO: {function} \nUSUARIO: {user} \nSTATUS: {status}  \nMENSAGEM: {self.message} \nPARAMETROS: {parametros}\nERRO: {error}"""
-    logger.warning(mensagem)
+    def warning(self, function, user, error, status, parametros=None):
+      current_hour = datetime.datetime.strftime(datetime.datetime.now(pytz.timezone("America/Sao_Paulo")), "%d-%m-%y %H:%M").replace('-','/')
+      mensagem = f"""\n####### ERRO #######\nHORA: {current_hour}\nFUNCAO: {function} \nUSUARIO: {user} \nSTATUS: {status}  \nMENSAGEM: {self.name} \nPARAMETROS: {parametros}\nERRO: {error}\n"""
+      self.logger.warning(mensagem)

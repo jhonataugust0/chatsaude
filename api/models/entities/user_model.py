@@ -1,6 +1,8 @@
 from sqlalchemy import Column,  Date, Integer,  BigInteger, VARCHAR 
 from ..configs.base import Base
+from typing import Dict, Any
 
+from typing import Any, Dict
 
 class Usuario(Base):
     __tablename__ = "usuario"
@@ -25,5 +27,7 @@ class Usuario(Base):
       return f"""id={self.id}, nome={self.nome}, telefone={self.telefone}, email={self.email}, data_nascimento={self.data_nascimento}, cep={self.cep}, bairro={self.bairro}, cpf={self.cpf}, rg={self.rg}, c_sus={self.c_sus}"""
 
     @classmethod
-    def as_dict(cls, row):
+    async def as_dict(cls, row) -> Dict[str, Any]:
         return {c.name: getattr(row, c.name) for c in row.__table__.columns}
+
+    

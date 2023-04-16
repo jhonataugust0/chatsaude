@@ -9,7 +9,6 @@ from api.bot.dispatcher import BotDispatcher
 from api.bot.dispatcher import BotOptions
 from api.bot.replies import Replies
 
-
 class Bot():
   
   def __init__(self, tags: str = ["Bot"]):
@@ -50,7 +49,7 @@ class Bot():
       user = ''
       bot_response = ''
       
-      user = user_entity.select_user_from_cellphone(int(number))
+      user = await user_entity.select_user_from_cellphone(int(number))
       bot_response = dispatcher.message_processor(message, int(number), user)
       dispatcher.trigger_processing(bot_response, number, user)
       

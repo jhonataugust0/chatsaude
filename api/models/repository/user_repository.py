@@ -3,17 +3,22 @@ from fastapi import HTTPException, status, Response
 from ..configs.connection import Connection
 from ..entities.user_model import Usuario
 from api.log.logging import Logging
-from sqlalchemy.orm.exc import NoResultFound 
+from api.models.entities.user_model import Usuario
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import select, MetaData, update, delete
+
+from typing import List, Optional, Dict, Any
+
 
 class UserRepository:
-
-  def select_all(self):
-    with Connection() as connection:
+          
+  async def select_all(self) -> List[Dict[str, Any]]:
+    async with Connection() as connection:
       try:
-        data = connection.session.query(Usuario).all()
-        user_dict = str(data).replace(' ', '').split(',')
-        user_dict = dict(i.split("=") for i in user_dict)
-        return user_dict  
+        query = select(Usuario)
+        result = await connection.execute(query)
+        rows = result.fetchall()
+        return [await Usuario.as_dict(row) for row in rows]
       
       except NoResultFound:
         message = f"Não foi possível resgatar os usuários"
@@ -28,51 +33,51 @@ class UserRepository:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=message
         )
+      
+      finally:
+        await connection.close()
 
-  def select_user_from_cellphone(self, cellphone):
+  async def select_user_from_cellphone(self, cellphone) -> Dict[str, Usuario]:
     """
-      Busca no banco de dados a linha de dados do usuário
-      informado
-
+      Busca no banco a linha de dados do usuário informado
         :params cellphone: int 
-      return dict
     """
-    with Connection() as connection:
+    async with Connection() as connection:
       try:
-        data = connection.session.query(Usuario).filter(Usuario.telefone == cellphone).one()
-        user_dict = str(data).replace(' ', '').split(',')
-        user_dict = dict(i.split("=") for i in user_dict)
+        query = select(Usuario).where(Usuario.telefone == cellphone)
+        result = await connection.execute(query)
+        user_dict = await Usuario.as_dict(result.scalar_one())
         return user_dict
  
       except NoResultFound:
         message = f"Não foi possível resgatar o usuário de telefone {cellphone}"
         log = Logging(message)
         log.info()
-        return {}
- 
+        return None
+
       except Exception as error:
         message = "Erro ao resgatar os dados do usuário"
         log = Logging(message)
         log.warning('select_user_from_cellphone', None, error, 500, {'params': {'cellphone': cellphone}})
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=message
         )
       
+      finally:
+        await connection.close()
 
-  def insert_new_user(self, telefone: int):
+  async def insert_new_user(self, telefone: int) -> Dict[str, Usuario]:
     """
       Inserta uma nova linha na tabela de usuarios 
         :params telefone: int 
-      return dict
     """
-    with Connection() as connection:
+    async with Connection() as connection:
       try:
-        data_insert = Usuario(telefone=telefone)
-        connection.session.add(data_insert)
-        connection.session.commit()
-        user_dict = str(data_insert).replace(' ', '').split(',')
-        user_dict = dict(i.split("=") for i in user_dict)
+        query = Usuario(telefone=telefone)
+        connection.add(query)
+        await connection.commit()
+        user_dict = await Usuario.as_dict(query)
         return user_dict
         
       except Exception as error:
@@ -83,8 +88,11 @@ class UserRepository:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=message
         )
-
-  def update_user_data(self, telefone, table, input_data):
+      
+      finally:
+          await connection.close()
+  
+  async def update_user_data(self, telefone, table, input_data) -> Dict[str, Usuario]:
     """
       Atualiza uma coluna no banco de dados baseado no id do
       usuário informado
@@ -93,11 +101,19 @@ class UserRepository:
       :params table: str
       :params input_data: int
     """
-    with Connection() as connection:
+    async with Connection() as connection:
       try:
-        data_update = connection.session.query(Usuario).filter(Usuario.telefone == telefone).update({ table: input_data})
-        connection.session.commit()
-        return data_update  
+        query = update(Usuario).where(Usuario.telefone == telefone).values({ table: input_data })
+        result = await connection.execute(query)
+        await connection.commit()
+        user_dict = await Usuario.as_dict(result.fetchone())
+        return user_dict
+      
+      except NoResultFound:
+        message = f"Não foi possível resgatar o usuário de telefone {telefone}"
+        log = Logging(message)
+        log.info()
+        return None
       
       except Exception as error:
         message = "Erro ao atualizar um fluxo existente no banco de dados"
@@ -107,11 +123,33 @@ class UserRepository:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=message
         )
+      
+      finally:
+          await connection.close()
 
-  def delete(self, name):
-    with Connection() as connection:
-      connection.session.query(Usuario).filter(Usuario.name == name).delete()
-      connection.session.commit()
+  async def delete(self, cellphone):
+    async with Connection() as connection:
+        try:
+          await connection.execute(Usuario.delete().where(Usuario.telefone == cellphone))
+          await connection.commit()
+        
+        except NoResultFound:
+          message = f"Não foi possível encontrar o usuário com nome {cellphone}"
+          log = Logging(message)
+          log.info()
+          return {'message': message, 'value': None}
+        
+        except Exception as error:
+          message = f"Erro ao excluir o usuário com nome {cellphone}"
+          log = Logging(message)
+          log.warning('delete', None, error, 500, {'params': {'cellphone': cellphone}})
+          raise HTTPException(
+              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+              detail=message
+          )
+        
+        finally:
+          await connection.close()
 
 
 

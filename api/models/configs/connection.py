@@ -1,28 +1,30 @@
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
-import os 
-from ..configs.base import Base
+from typing import Optional
+import os  
 
-  
+class Connection:
+    def __init__(self):
+        self.url_connection = os.environ.get("CONNECTION_URL")
+        self.engine = None
+        self.async_session = None
+        self.sql_meta = MetaData()
 
-class Connection():
-  def __init__(self):
-    self.url_connection = os.environ.get("CONNECTION_URL")
-    self.engine = self.create_database_engine()
-    self.session = None
-    self.sql_meta = MetaData(self.engine)
+    async def connect(self):
+        self.engine = create_async_engine(f"{self.url_connection}")
+        async_session = sessionmaker(
+            self.engine, class_=AsyncSession, expire_on_commit=False
+        )
+        self.async_session = async_session()
 
-  def create_database_engine(self):
-    engine = create_engine(f'{self.url_connection}')
-    return engine
+    async def close(self):
+        await self.async_session.close()
+        await self.engine.dispose()
 
-  def get_engine(self):
-    return self.engine
+    async def __aenter__(self):
+        await self.connect()
+        return self.async_session
 
-  def __enter__(self):
-    session_make = sessionmaker(bind=self.engine)
-    self.session = session_make()
-    return self
-
-  def __exit__(self, exc_type, exc_val, exc_tb):
-    self.session.close()
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
