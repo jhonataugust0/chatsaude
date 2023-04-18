@@ -20,5 +20,5 @@ class Especialidade(Base):
       return f"""id = {int(self.id)}, nome = {str(self.nome)}, ativo = {int(self.ativo)}, id_unidade = {int(self.id_unidade)}"""
 
     @classmethod
-    async def as_dict(cls, row) -> Dict[str, Any]:
+    def as_dict(cls, row) -> Dict[str, Any]:
         return {c.name: getattr(row, c.name) for c in row.__table__.columns}

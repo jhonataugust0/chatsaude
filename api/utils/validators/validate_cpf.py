@@ -1,7 +1,7 @@
 from api.log.logging import Logging
 from fastapi import HTTPException, status
 
-def validate_cpf(numbers: str):
+async def validate_cpf(numbers: str):
     """
         Verificação matemática para a validação do número de
         CPF do usuário
@@ -35,7 +35,7 @@ def validate_cpf(numbers: str):
     except Exception as error:
       message_log = f'Erro ao validar o CPF {numbers}'
       log = Logging(message_log)
-      log.warning('validate_cpf', None, str(error), 500, {'params': {'numbers': numbers}})
+      await log.warning('validate_cpf', None, str(error), 500, {'params': {'numbers': numbers}})
       raise HTTPException(
           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
           detail=message_log

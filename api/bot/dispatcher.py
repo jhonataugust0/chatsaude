@@ -16,7 +16,7 @@ from api.utils.validators.validate_email import validate_email
 from api.utils.validators.validate_times import validate_nascent_date, validate_date_schedule
 from api.utils.validators.validate_cpf import validate_cpf
 from api.utils.validators.validate_c_sus import validate_cns
-from api.utils.date import get_more_forty_five, format_date_for_user, format_time_for_user
+from api.utils.date import get_more_forty_five, format_date_for_user, format_time_for_user, convert_to_datetime
 
 class BotOptions:
   REGISTER_USER = '1'
@@ -77,7 +77,7 @@ class BotDispatcher:
     except Exception as error:
       message_log = f'Erro ao processar a input do usuário {message}'
       log = Logging(message_log)
-      log.warning('message_processor', None, str(error), 500, {'params': {'message': message, 'cellphone': cellphone}})
+      await log.warning('message_processor', None, str(error), 500, {'params': {'message': message, 'cellphone': cellphone}})
       raise HTTPException(
           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
           detail=message_log
@@ -100,7 +100,7 @@ class BotDispatcher:
         consult_entity = AgendamentosRepository()
         verify_exists_flow = await stage_entity.select_stage_from_user_id(int(user['id'])) 
         
-        if 'fluxo_agendamento_consulta' in verify_exists_flow and (verify_exists_flow['fluxo_agendamento_consulta'] == '0' or verify_exists_flow['fluxo_agendamento_consulta'] == 'None'):
+        if 'fluxo_agendamento_consulta' in verify_exists_flow and (verify_exists_flow['fluxo_agendamento_consulta'] == 0 or verify_exists_flow['fluxo_agendamento_consulta'] == None):
           await stage_entity.update_flow_from_user_id(int(user['id']), 'fluxo_agendamento_consulta', 1)
           await stage_entity.update_flow_from_user_id(int(user['id']), 'etapa_agendamento_consulta', 0)
           await consult_entity.insert_new_schedule_consult(int(user['id']))
@@ -118,7 +118,7 @@ class BotDispatcher:
     except Exception as error:
       message_log = f'Erro ao processar os gatilhos {bot_response}'
       log = Logging(message_log)
-      log.warning('trigger_processing', None, str(error), 500, {'params': {'number': number, 'bot_response': bot_response}})
+      await log.warning('trigger_processing', None, str(error), 500, {'params': {'number': number, 'bot_response': bot_response}})
       raise HTTPException(
           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
           detail=message_log
@@ -149,7 +149,7 @@ class BotDispatcher:
       
       elif int(user_flow['etapa_registro']) == 2:
         
-        if (validate_email(message)):
+        if (await validate_email(message)):
           await user_entity.update_user_data(user['telefone'], 'email', str(message)) 
           await flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
           await send_message("Digite sua data de nascimento\nEx:01/02/2000", number_formated)     
@@ -168,7 +168,7 @@ class BotDispatcher:
       
       elif int(user_flow['etapa_registro']) == 3: 
         
-        nescient_date = validate_nascent_date(message) 
+        nescient_date = await validate_nascent_date(message) 
         if (nescient_date['value']):
           await user_entity.update_user_data(user['telefone'], 'data_nascimento', nescient_date['date'])
           await flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
@@ -192,7 +192,7 @@ class BotDispatcher:
         )
 
       elif int(user_flow['etapa_registro']) == 5:
-        if (validate_cpf(message)):
+        if (await validate_cpf(message)):
           await user_entity.update_user_data(user['telefone'], 'cpf', int(message.replace('.','').replace('-','')))
           await flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
           await send_message("Digite o número do seu RG\nEx:4563912-9", number_formated)
@@ -219,8 +219,8 @@ class BotDispatcher:
         )
       
       elif int(user_flow['etapa_registro']) == 7:
-        if (validate_cns(str(message).replace('.','').replace('-',''))):
-          await user_entity.update_user_data(user['telefone'], 'c_sus', str(message).replace('.','').replace('-',''))
+        if (await validate_cns(str(message).replace('.','').replace('-',''))):
+          await user_entity.update_user_data(user['telefone'], 'c_sus', float(str(message).replace('.','').replace('-','')))
           await flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', flow_status)
           await send_message("Digite o nome do seu bairro\nEx: Benedito Bentes", number_formated) 
           return Response(
@@ -241,8 +241,8 @@ class BotDispatcher:
         await flow_entity.update_flow_from_user_id(user['id'], 'fluxo_registro', 0)
         await flow_entity.update_flow_from_user_id(user['id'], 'etapa_registro', 0)
         info = "Usuário cadastrado com êxito"
-        log = Logging(info)
-        log.info()
+        log = await Logging(info).info()
+
         await send_message("Parabéns, seu cadastro foi concluído, agora você pode agendar consultas ou exames pelo chat!\nDigite qualquer tecla para ver as opções", number_formated) 
         return Response(
             status_code=status.HTTP_200_OK, 
@@ -252,7 +252,7 @@ class BotDispatcher:
     except Exception as error:
       message_log = 'Erro ao atualizar os dados do usuário no banco de dados'
       log = Logging(message_log)
-      log.warning('flow_registration', None, str(error), 500, {'params': {'message': message, 'user': user}})
+      await log.warning('flow_registration', None, str(error), 500, {'params': {'message': message, 'user': user}})
       raise HTTPException(
           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
           detail=message_log
@@ -301,17 +301,24 @@ class BotDispatcher:
         consult_data = await consult_entity.update_schedule_from_user_id(user['id'], 'id_unidade', int(message))
         last_time = await consult_entity.get_last_time_scheduele_from_specialty_id(int(consult_data['id_especialidade']), int(consult_data['id_unidade']))
         if consult_data['id_unidade'] != 'None':
-          data = format_date_for_user(str(last_time['data_agendamento']))
-          hora = format_time_for_user(last_time['horario_termino_agendamento']) 
-          await send_message(f"""Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023\nAtenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}""", number_formated)
-          return Response(
-              status_code=status.HTTP_200_OK, 
-              content="Mensagem enviada com sucesso"
-          )
-      
+          if last_time != None:
+            data = await format_date_for_user(str(last_time['data_agendamento']))
+            hora = await format_time_for_user(last_time['horario_termino_agendamento']) 
+            await send_message(f"""Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023\nAtenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}""", number_formated)
+            return Response(
+                status_code=status.HTTP_200_OK, 
+                content="Mensagem enviada com sucesso"
+            )
+          else:
+            await send_message(f"""Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023""", number_formated)
+            return Response(
+                status_code=status.HTTP_200_OK, 
+                content="Mensagem enviada com sucesso"
+            )
+        
       elif int(user_flow['etapa_agendamento_consulta']) == 3:
         
-        date = validate_date_schedule(message) 
+        date = await validate_date_schedule(message) 
         if (date['value']):
           user_flow = await flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
           await consult_entity.update_schedule_from_user_id(user['id'], 'data_agendamento', date['date'])
@@ -336,9 +343,10 @@ class BotDispatcher:
             data_schedule['id_especialidade'], 
             data_schedule['data_agendamento'], 
             str(message) + ":00", # horario_inicio_agendamento
-            get_more_forty_five(message) # horario_termino_agendamento
+            await get_more_forty_five(message), # horario_termino_agendamento
+            data_schedule['id'],
         )
-        if len(conflict) > 0:
+        if conflict:
           await send_message("Desculpe, esse horário está indisponível, por favor, informe um horário no mínimo superior ao informado anteriormente", number_formated)
           return Response(
               status_code=status.HTTP_200_OK, 
@@ -346,9 +354,9 @@ class BotDispatcher:
           )
         else:
           user_flow = await flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
-          final_schedule = get_more_forty_five(str(message))
-          consult_data = await consult_entity.update_schedule_from_user_id(user['id'], 'horario_inicio_agendamento', str(message))
-          consult_data = await consult_entity.update_schedule_from_user_id(user['id'], 'horario_termino_agendamento', final_schedule)
+          final_schedule = await get_more_forty_five(str(message))
+          consult_data = await consult_entity.update_schedule_from_user_id(user['id'], 'horario_inicio_agendamento', await convert_to_datetime(str(message)+":00"))
+          consult_data = await consult_entity.update_schedule_from_user_id(user['id'], 'horario_termino_agendamento', await convert_to_datetime(final_schedule))
           await send_message("(Opcional) Digite uma mensagem descrevendo qual a sua necessidade para a especialidade escolhida.\nEx: Exame de rotina\nVocê pode digitar qualquer coisa para ignorar essa etapa)", number_formated)
           return Response(
               status_code=status.HTTP_200_OK, 
@@ -360,7 +368,7 @@ class BotDispatcher:
         user_flow = await flow_entity.update_flow_from_user_id(user['id'], 'fluxo_agendamento_consulta', 0)
         consult_data = await consult_entity.update_schedule_from_user_id(user['id'], 'descricao_necessidade', str(message))
         all_data = await consult_entity.select_all_data_from_schedule_with_id(consult_data['id'])
-        await send_message(f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {format_date_for_user(all_data['data_agendamento'])} as {format_time_for_user(all_data['horario_inicio_agendamento'])} horas para a sua consulta com o {all_data['specialty_info']['nome']}", number_formated)
+        await send_message(f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {await format_date_for_user(all_data['data_agendamento'])} as {await format_time_for_user(all_data['horario_inicio_agendamento'])} horas para a sua consulta com o {all_data['specialty_info']['nome']}", number_formated)
         return Response(
             status_code=status.HTTP_200_OK, 
             content="Mensagem enviada com sucesso"
@@ -377,7 +385,7 @@ class BotDispatcher:
     except Exception as error:
       message_log = 'Erro ao atualizar os dados do agendamento no banco de dados'
       log = Logging(message_log)
-      log.warning('data_schedule_consult_update_flow', None, str(error), 500, {'params': {'message': message, 'user': user}})
+      await log.warning('data_schedule_consult_update_flow', None, str(error), 500, {'params': {'message': message, 'user': user}})
       raise HTTPException(
           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
           detail=message_log

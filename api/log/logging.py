@@ -18,10 +18,12 @@ class Logging:
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
-    def info(self):
+    async def info(self):
       self.logger.info(self.name)
+      return None
 
-    def warning(self, function, user, error, status, parametros=None):
+    async def warning(self, function, user, error, status, parametros=None):
       current_hour = datetime.datetime.strftime(datetime.datetime.now(pytz.timezone("America/Sao_Paulo")), "%d-%m-%y %H:%M").replace('-','/')
       mensagem = f"""\n####### ERRO #######\nHORA: {current_hour}\nFUNCAO: {function} \nUSUARIO: {user} \nSTATUS: {status}  \nMENSAGEM: {self.name} \nPARAMETROS: {parametros}\nERRO: {error}\n"""
       self.logger.warning(mensagem)
+      return None

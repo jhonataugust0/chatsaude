@@ -37,7 +37,7 @@ class Bot():
     except Exception as error:
       message_log = 'Erro ao obter os dados da mensagem recebida'
       log = Logging(message_log)
-      log.warning('message', None, str(error), 500, {'params': body})
+      await log.warning('message', None, str(error), 500, {'params': body})
       raise HTTPException(
           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
           detail=message_log
@@ -51,12 +51,12 @@ class Bot():
       
       user = await user_entity.select_user_from_cellphone(int(number))
       bot_response = await dispatcher.message_processor(message, int(number), user)
-      await dispatcher.trigger_processing(bot_response, number, user)
+      await dispatcher.trigger_processing(bot_response, int(number), user)
       
     except Exception as error:
       message_log = 'Erro ao tratar a mensagem recebida'
       log = Logging(message_log)
-      log.warning('message', None, str(error), 500, {'params': body})
+      await log.warning('message', None, str(error), 500, {'params': body})
       raise HTTPException(
           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
           detail=message
@@ -69,13 +69,13 @@ class Bot():
         user_stage = await stage_entity.select_stage_from_user_id(int(user['id']))
 
         if user_stage and int(user_stage['fluxo_registro']) == 1:
-          dispatcher.data_users_update_flow(user, message)
+          await dispatcher.data_users_update_flow(user, message)
           return {}
 
         elif user_stage and 'fluxo_agendamento_consulta' in user_stage:
           if user_stage['fluxo_agendamento_consulta'] != 'None':
             if int(user_stage['fluxo_agendamento_consulta']) == 1:
-              dispatcher.data_schedule_consult_update_flow(user, message)  
+              await dispatcher.data_schedule_consult_update_flow(user, message)  
 
       if 'message' in bot_response: 
         
@@ -107,7 +107,7 @@ class Bot():
     except Exception as error:
       message_log = f'Erro ao inicializar o fluxo'
       log = Logging(message_log)
-      log.warning('message', None, str(error), 500, {'params': body})
+      await log.warning('message', None, str(error), 500, {'params': body})
       raise HTTPException(
           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
           detail=message

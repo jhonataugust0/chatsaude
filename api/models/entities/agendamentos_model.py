@@ -28,7 +28,7 @@ class Agendamentos(Base):
       return f"""id = {self.id}, id_usuario = {self.id_usuario}, id_unidade = {self.id_unidade}, id_especialidade = {self.id_especialidade}, tipo_agendamento = {self.tipo_agendamento}, data_agendamento = {self.data_agendamento}, horario_inicio_agendamento = {self.horario_inicio_agendamento}, horario_termino_agendamento = {self.horario_termino_agendamento}, descricao_necessidade = {self.descricao_necessidade}, ativo= {self.ativo}"""
 
     @classmethod
-    async def as_dict(cls, row) -> Dict[str, Any]:
+    def as_dict(cls, row) -> Dict[str, Any]:
         return {c.name: getattr(row, c.name) for c in row.__table__.columns}
 
         

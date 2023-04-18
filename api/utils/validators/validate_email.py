@@ -2,7 +2,7 @@ import re
 from api.log.logging import Logging
 from fastapi import HTTPException, status
 
-def validate_email(email: str):
+async def validate_email(email: str):
   """
     Verifica se o email digitado pelo usuário é válido
       :params email: str
@@ -15,7 +15,7 @@ def validate_email(email: str):
   except Exception as error:
     message_log = f'Erro ao validar o email {email}'
     log = Logging(message_log)
-    log.warning('validate_email', None, str(error), 500, {'params': {'email': email}})
+    await log.warning('validate_email', None, str(error), 500, {'params': {'email': email}})
     raise HTTPException(
           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
           detail=message_log
