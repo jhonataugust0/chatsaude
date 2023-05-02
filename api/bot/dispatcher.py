@@ -274,13 +274,14 @@ class BotDispatcher:
     flow_status = (int(user_flow['etapa_agendamento_consulta']) + 1)
     try:
       number_formated = f"whatsapp:+"+str(user['telefone'])
-      
+      schedule_data = await consult_entity.select_data_schedule_from_user_id(user['id'])
+
       if int(user_flow['etapa_agendamento_consulta']) == 1:
         specialty_entity = EspecialidadeRepository()
         specialty_user_request = await specialty_entity.select_specialty_from_name(message)
         user_flow = await flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
         
-        consult_data = await consult_entity.update_schedule_from_id(user['id'], 'id_especialidade', specialty_user_request['id'])
+        consult_data = await consult_entity.update_schedule_from_id(schedule_data['id'], 'id_especialidade', specialty_user_request['id'])
         
         await send_message("Escolha a unidade suportada mais próxima de você\nDigite o número correspondente ao da unidade desejada\nEx: 1", number_formated)
         unities = await unities_entity.select_all()
@@ -298,7 +299,7 @@ class BotDispatcher:
         
       elif int(user_flow['etapa_agendamento_consulta']) == 2:
         user_flow = await flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
-        consult_data = await consult_entity.update_schedule_from_user_id(user['id'], 'id_unidade', int(message))
+        consult_data = await consult_entity.update_schedule_from_id(schedule_data['id'], 'id_unidade', int(message))
         last_time = await consult_entity.get_last_time_scheduele_from_specialty_id(int(consult_data['id_especialidade']), int(consult_data['id_unidade']))
         if consult_data['id_unidade'] != 'None':
           if last_time != None:
@@ -321,7 +322,7 @@ class BotDispatcher:
         date = await validate_date_schedule(message) 
         if (date['value']):
           user_flow = await flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
-          await consult_entity.update_schedule_from_user_id(user['id'], 'data_agendamento', date['date'])
+          await consult_entity.update_schedule_from_id(schedule_data['id'], 'data_agendamento', date['date'])
           await send_message("Digite o horário que deseja realizar a consulta (atente-se para o horário estar dentro do período de funcionamento da unidade escolhida)\nEx: 08:00", number_formated)
           return Response(
               status_code=status.HTTP_200_OK, 
@@ -355,8 +356,8 @@ class BotDispatcher:
         else:
           user_flow = await flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', flow_status)
           final_schedule = await get_more_forty_five(str(message))
-          consult_data = await consult_entity.update_schedule_from_user_id(user['id'], 'horario_inicio_agendamento', await convert_to_datetime(str(message)+":00"))
-          consult_data = await consult_entity.update_schedule_from_user_id(user['id'], 'horario_termino_agendamento', await convert_to_datetime(final_schedule))
+          consult_data = await consult_entity.update_schedule_from_id(schedule_data['id'], 'horario_inicio_agendamento', await convert_to_datetime(str(message)+":00"))
+          consult_data = await consult_entity.update_schedule_from_id(schedule_data['id'], 'horario_termino_agendamento', await convert_to_datetime(final_schedule))
           await send_message("(Opcional) Digite uma mensagem descrevendo qual a sua necessidade para a especialidade escolhida.\nEx: Exame de rotina\nVocê pode digitar qualquer coisa para ignorar essa etapa)", number_formated)
           return Response(
               status_code=status.HTTP_200_OK, 
@@ -366,7 +367,7 @@ class BotDispatcher:
       elif int(user_flow['etapa_agendamento_consulta']) == 5:
         user_flow = await flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', 0)
         user_flow = await flow_entity.update_flow_from_user_id(user['id'], 'fluxo_agendamento_consulta', 0)
-        consult_data = await consult_entity.update_schedule_from_user_id(user['id'], 'descricao_necessidade', str(message))
+        consult_data = await consult_entity.update_schedule_from_id(schedule_data['id'], 'descricao_necessidade', str(message))
         all_data = await consult_entity.select_all_data_from_schedule_with_id(consult_data['id'])
         await send_message(f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {await format_date_for_user(all_data['data_agendamento'])} as {await format_time_for_user(all_data['horario_inicio_agendamento'])} horas para a sua consulta com o {all_data['specialty_info']['nome']}", number_formated)
         return Response(
@@ -375,7 +376,7 @@ class BotDispatcher:
         )
 
      
-      if int(user_flow['etapa_agendamento_consulta']) == 0 or user_flow['etapa_agendamento_consulta'] == 'None':
+      if int(user_flow['etapa_agendamento_consulta']) == 0 or user_flow['etapa_agendamento_consulta'] == 0:
         consult_flow_stage = await flow_entity.update_flow_from_user_id(user['id'], 'etapa_agendamento_consulta', 1)
         return Response(
             status_code=status.HTTP_200_OK, 

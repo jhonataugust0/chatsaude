@@ -113,7 +113,7 @@ class FluxoEtapaRepository:
     async with Connection() as connection:
      
       try:
-        query = update(FluxoEtapa).where(FluxoEtapa.id_usuario == id_usuario).values({ table: input_data}).returning(FluxoEtapa.id)
+        query = update(FluxoEtapa).where(FluxoEtapa.id_usuario == id_usuario).values({ table: input_data }).returning(FluxoEtapa.id)
         result = await connection.execute(query)
         await connection.commit()
         flow_id = result.scalar_one()

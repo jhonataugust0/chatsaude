@@ -31,7 +31,7 @@ async def format_date_for_user(date):
 
 
 
-def format_time_for_user(time):
+async def format_time_for_user(time):
   time_formated = str(time).split(':')
   return f"{time_formated[0]}:{time_formated[1]}"
 

@@ -207,18 +207,18 @@ class AgendamentosRepository:
       finally:
           await connection.close()
       
-  async def update_schedule_from_id(self, id_usuario: int, table: str, input_data: int) -> Dict[str, Agendamentos]:
+  async def update_schedule_from_id(self, id: int, table: str, input_data: int) -> Dict[str, Agendamentos]:
     """
       Atualiza uma coluna no banco de dados baseado no id do
       usuário informado
 
-      :params id_usuario: int 
+      :params id: int 
       :params table: str
       :params input_data: int
     """
     async with Connection() as connection:
       try:
-        query = update(Agendamentos).where(Agendamentos.id_usuario == id_usuario, Agendamentos.ativo == 1).values({ table: input_data}).returning(Agendamentos.id)
+        query = update(Agendamentos).where(Agendamentos.id == id, Agendamentos.ativo == 1).values({ table: input_data}).returning(Agendamentos.id)
         result = await connection.execute(query)
         await connection.commit()
         schedule_id = result.scalar_one()
@@ -228,14 +228,14 @@ class AgendamentosRepository:
         return schedule_dict 
 
       except NoResultFound:
-        message = f"Não foi possível resgatar o agendamento do usuário de id {id_usuario}"
+        message = f"Não foi possível resgatar o agendamento do usuário de id {id}"
         log = await Logging(message).info()
         return None
       
       except Exception as error:
         message = "Erro ao atualizar os dados do usuário"
         log = Logging(message)
-        await log.warning('update_schedule_from_user_id', None, error, 500, {'params': {'id_usuario':id_usuario, 'table': table, 'input_data': input_data}})
+        await log.warning('update_schedule_from_user_id', None, error, 500, {'params': {'id':id, 'table': table, 'input_data': input_data}})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=message
