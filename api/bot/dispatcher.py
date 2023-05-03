@@ -303,8 +303,8 @@ class BotDispatcher:
         last_time = await consult_entity.get_last_time_scheduele_from_specialty_id(int(consult_data['id_especialidade']), int(consult_data['id_unidade']))
         if consult_data['id_unidade'] != 'None':
           if last_time != None:
-            data = await format_date_for_user(str(last_time['data_agendamento']))
-            hora = await format_time_for_user(last_time['horario_termino_agendamento']) 
+            data = await format_date_for_user(str(last_time[-1]['data_agendamento']))
+            hora = await format_time_for_user(last_time[-1]['horario_termino_agendamento']) 
             await send_message(f"""Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023\nAtenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}""", number_formated)
             return Response(
                 status_code=status.HTTP_200_OK, 

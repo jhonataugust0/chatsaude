@@ -9,7 +9,8 @@ from ..repository.especialidade_repository import EspecialidadeRepository
 from ..repository.unidade_repository import UnidadeRepository
 from api.log.logging import Logging
 from sqlalchemy.orm.exc import NoResultFound 
-from sqlalchemy import select, MetaData, update, delete, text
+from sqlalchemy import select, MetaData, update, delete, text, desc, tuple_, and_
+
 
 from typing import List, Optional, Dict, Any, Union
 
@@ -50,7 +51,7 @@ class AgendamentosRepository:
     """
     async with Connection() as connection:
       try:
-        query = select(Agendamentos).where(Agendamentos.id_usuario == user_id)
+        query = select(Agendamentos).where(Agendamentos.id_usuario == user_id, Agendamentos.ativo == 1).order_by(desc(Agendamentos.id)).limit(1)
         result = await connection.execute(query)
         schedule_dict = Agendamentos.as_dict(result.scalar_one())
         return schedule_dict   
@@ -276,21 +277,19 @@ class AgendamentosRepository:
   async def get_last_time_scheduele_from_specialty_id(self, specialty_id: int, unity_id: int) -> Dict[str, Agendamentos]:
     async with Connection() as connection:
       try:
-        query = select(Agendamentos.data_agendamento, Agendamentos.horario_termino_agendamento).where(
-          Agendamentos.id_especialidade == specialty_id, 
-          Agendamentos.id_unidade == unity_id,
-          Agendamentos.data_agendamento != None, 
-          Agendamentos.horario_termino_agendamento != None
-        ).order_by(Agendamentos.id.desc())
+        columns = [Agendamentos.data_agendamento, Agendamentos.horario_termino_agendamento]
 
+        query = select(Agendamentos.data_agendamento, Agendamentos.horario_termino_agendamento).where(
+            Agendamentos.id_especialidade == specialty_id, 
+            Agendamentos.id_unidade == unity_id,
+            Agendamentos.data_agendamento != None, 
+            Agendamentos.horario_termino_agendamento != None
+        ).order_by(Agendamentos.id.desc()) 
         result = await connection.execute(query)
-        row = result.fetchone()
-        if row is not None:
-          data_schedule = Agendamentos.as_dict(row)
-          return data_schedule   
-        else:
-          return None
-          
+        keys = ['data_agendamento', 'horario_termino_agendamento']
+        dict_result = [dict(zip(keys, values)) for values in result]   
+        return dict_result if len(dict_result) > 0 else None
+        
 
       except NoResultFound:
         message = f"Não foi possível encontrar agendamentos com a especialidade de id {specialty_id} na unidade de id {unity_id}"
