@@ -1,7 +1,7 @@
 # from sqlalchemy.ext.asyncio import AsyncSession
 # from sqlalchemy.ext.asyncio import create_async_engine
 # from sqlalchemy.orm import sessionmaker, declarative_base
-# from sqlalchemy import Column,  Date, Time,  ForeignKey,  func,  Integer,  String, BigInteger, VARCHAR, Text 
+# from sqlalchemy import Column,  Date, Time,  ForeignKey,  func,  Integer,  String, BigInteger, VARCHAR, Text
 # import yaml
 
 # with open('env.yaml', 'r') as file:
@@ -30,7 +30,7 @@
 #   id = Column(Integer, primary_key=True)
 #   nome = Column(VARCHAR(50))
 
-#   __mapper_args__ = {"eager_defaults": True}  
+#   __mapper_args__ = {"eager_defaults": True}
 
 # class FluxoEtapa(Base):
 #   __tablename__ = "fluxo_etapa"
@@ -40,7 +40,7 @@
 #   fluxo_agendamento_consulta = Column(Integer)
 #   fluxo_agendamento_exame = Column(Integer)
 #   lista_unidades = Column(Integer)
-  
+
 #   __mapper_args__ = {"eager_defaults": True}
 
 # class Unidade(Base):
@@ -68,7 +68,7 @@
 #   cep = Column(BigInteger)
 #   cpf = Column(BigInteger)
 #   rg = Column(BigInteger)
-#   c_sus =Column(BigInteger)  
+#   c_sus =Column(BigInteger)
 
 # class Agendamentos(Base):
 #   __tablename__ = "consulta_agendameno"
@@ -82,4 +82,3 @@
 #   descricao_necessidade = Column(Text)
 
 #   __mapper_args__ = {"eager_defaults": True}
-  

@@ -1,16 +1,17 @@
-from api.log.logging import Logging
 from fastapi import HTTPException, status
 
-async def validate_cpf(numbers: str):
-    """
-        Verificação matemática para a validação do número de
-        CPF do usuário
+from api.log.logging import Logging
 
-            :params numbers: str
-            return boolean
+
+async def validate_cpf(numbers: str) -> bool:
+    """
+    Verificação matemática para a validação do número de
+    CPF do usuário
+
+        :params numbers: str
+        return boolean
     """
     try:
-        
         #  Obtém os números do CPF e ignora outros caracteres
         cpf = [int(char) for char in numbers if char.isdigit()]
 
@@ -26,17 +27,18 @@ async def validate_cpf(numbers: str):
 
         #  Valida os dois dígitos verificadores
         for i in range(9, 11):
-            value = sum((cpf[num] * ((i+1) - num) for num in range(0, i)))
+            value = sum((cpf[num] * ((i + 1) - num) for num in range(0, i)))
             digit = ((value * 10) % 11) % 10
             if digit != cpf[i]:
                 return False
         return True
-    
+
     except Exception as error:
-      message_log = f'Erro ao validar o CPF {numbers}'
-      log = Logging(message_log)
-      await log.warning('validate_cpf', None, str(error), 500, {'params': {'numbers': numbers}})
-      raise HTTPException(
-          status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-          detail=message_log
-      )
+        message_log = f"Erro ao validar o CPF {numbers}"
+        log = Logging(message_log)
+        await log.warning(
+            "validate_cpf", None, str(error), 500, {"params": {"numbers": numbers}}
+        )
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
+    )
