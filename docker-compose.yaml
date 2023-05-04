@@ -1,14 +1,14 @@
 version: '3'
 
 services:
-  api:
-    build:
-      context: .
-    env_file: .env
-    ports:
-      - '8000:8000'
-    volumes:
-      - .:/app
-    sysctls:
-      - net.ipv4.tcp_keepalive_time=200
+  chatsaude:
+      build:
+        context: ./api
+      env_file: .env
+      ports:
+        - '8000:80'
+      volumes:
+        - .:/api
+      sysctls:
+        - net.ipv4.tcp_keepalive_time=200
     
