@@ -1,17 +1,22 @@
+import os
 from typing import Any, Dict, List, Optional
-
 from fastapi import HTTPException, Response, status
 from sqlalchemy import MetaData, delete, insert, select, update
 from sqlalchemy.orm.exc import NoResultFound
 
 from api.log.logging import Logging
-from api.models.entities.user_model import Usuario
+from api.services.user.models.entity.user_model import Usuario
 
-from ..configs.connection import Connection
-from ..entities.user_model import Usuario
+from .....models.configs.connection import Connection
+from ..entity.user_model import Usuario
 
 
-class UserRepository:
+class UserRepository(Connection):
+    connection_url = os.environ.get("CONNECTION_URL")
+
+    def __init__(self):
+        super().__init__(UserRepository.connection_url)
+
     async def select_all(self) -> List[Dict[str, Usuario]]:
         """
             Método que retorna todos os usuários do banco de

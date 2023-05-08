@@ -1,16 +1,20 @@
+import os
 from typing import Any, Dict, List, Optional
-
 from fastapi import HTTPException, Response, status
 from sqlalchemy import MetaData, delete, select, update
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from api.log.logging import Logging
 
-from ..configs.connection import Connection
-from ..entities.especialidade_model import Especialidade
+from .....models.configs.connection import Connection
+from ..entity.especialidade_model import Especialidade
 
+class EspecialidadeRepository(Connection):
+    connection_url = os.environ.get("CONNECTION_URL")
 
-class EspecialidadeRepository:
+    def __init__(self):
+        super().__init__(EspecialidadeRepository.connection_url)
+
     async def select_all(self) -> List[Dict[str, Especialidade]]:
         """
             Método que resgata todas as especialidades regis-

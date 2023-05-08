@@ -1,27 +1,26 @@
+
+from ..bot.replies import Replies
+from time import sleep
+from fastapi import HTTPException, Response, status
+from api.log.logging import Logging
+from ..bot.flows.register_user_flow import Register_user_flow
 from datetime import date as date_type
 from datetime import time as time_type
-from time import sleep
 
-from fastapi import HTTPException, Response, status
-
-from api.bot.replies import Replies
-from api.log.logging import Logging
-from api.models.repository.consulta_gendameno_repository import \
-    AgendamentosRepository
-from api.models.repository.especialidade_repository import \
-    EspecialidadeRepository
-from api.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
-from api.models.repository.unidade_repository import UnidadeRepository
-from api.models.repository.user_repository import UserRepository
-from api.utils.bot_utils import send_message
-from api.utils.date import (convert_to_datetime, format_date_for_user,
-                            format_time_for_user, get_more_forty_five)
-from api.utils.validators.validate_c_sus import validate_cns
-from api.utils.validators.validate_cpf import validate_cpf
-from api.utils.validators.validate_email import validate_email
-from api.utils.validators.validate_times import (validate_date_schedule,
+from ..bot.flows.schedule_consult_flow import Schedule_consult_flow
+from api.services.schedules.models.repository.consulta_gendameno_repository import AgendamentosRepository
+from api.services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
+from api.services.health_unit.models.repository.unidade_repository import UnidadeRepository
+from api.services.user.models.repository.user_repository import UserRepository
+from ..utils.bot_utils import send_message
+from ..utils.validators.validate_cep import validate_cep
+from ..utils.validators.validate_c_sus import validate_cns
+from ..utils.validators.validate_cpf import validate_cpf
+from ..utils.validators.validate_email import validate_email
+from ..utils.validators.validate_times import (validate_date_schedule,
                                                  validate_nascent_date)
-
+from ..utils.date import (convert_to_datetime, format_date_for_user,
+                            format_time_for_user, get_more_forty_five)
 
 class BotOptions:
     REGISTER_USER = "1"
@@ -187,49 +186,35 @@ class BotDispatcher:
 
     async def data_users_update_flow(self, user: dict, message: str):
         """
-        Método responsável por realizar a atualização de dados
-        de um usuário durante o processo de cadastro do mesmo.
+        Método responsável por orquestar os inputs do usuário
+        para os métodos corretos das classes de fluxo para a
+        execução de uma conversa com o chatbot.
           :params user: dict
           :params message: string
         """
-        user_entity = UserRepository()
         flow_entity = FluxoEtapaRepository()
+        register_flow = Register_user_flow()
+        number_formated = f"whatsapp:+" + str(user["telefone"])
+
         try:
-            number_formated = f"whatsapp:+" + str(user["telefone"])
             user_flow = await flow_entity.select_stage_from_user_id(int(user["id"]))
             flow_status = user_flow["etapa_registro"] + 1
 
             if user_flow["etapa_registro"] == 1:
-                await user_entity.update_user_data(
-                    user["telefone"], "nome", str(message)
-                )
-                await flow_entity.update_flow_from_user_id(
-                    user["id"], "etapa_registro", flow_status
-                )
+                await register_flow.define_user_name(user, message, flow_status)
                 await send_message(
                     "Digite seu melhor email\nEx:maria.fatima@gmail.com",
                     number_formated,
                 )
-                return Response(
-                    status_code=status.HTTP_200_OK,
-                    content="Mensagem enviada com sucesso",
-                )
+                return True
 
             elif user_flow["etapa_registro"] == 2:
                 if await validate_email(message):
-                    await user_entity.update_user_data(
-                        user["telefone"], "email", str(message)
-                    )
-                    await flow_entity.update_flow_from_user_id(
-                        user["id"], "etapa_registro", flow_status
-                    )
+                    await register_flow.define_user_email(user, message, flow_status)
                     await send_message(
                         "Digite sua data de nascimento\nEx:12/12/1997", number_formated
                     )
-                    return Response(
-                        status_code=status.HTTP_200_OK,
-                        content="Mensagem enviada com sucesso",
-                    )
+                    return True
 
                 else:
                     reply = "Por favor, digite um email válido"
@@ -242,13 +227,13 @@ class BotDispatcher:
                 nescient_date = await validate_nascent_date(message)
 
                 if nescient_date["value"]:
-                    await user_entity.update_user_data(
-                        user["telefone"], "data_nascimento", nescient_date["date"]
-                    )
-                    await flow_entity.update_flow_from_user_id(
-                        user["id"], "etapa_registro", flow_status
+                    await register_flow.define_user_nascent_date(
+                        user,
+                        nescient_date['date'],
+                        flow_status
                     )
                     await send_message("Digite seu CEP\nEx:56378-921", number_formated)
+                    return True
 
                 else:
                     reply = "Por favor, digite uma data válida"
@@ -258,35 +243,25 @@ class BotDispatcher:
                     )
 
             elif user_flow["etapa_registro"] == 4:
-                await user_entity.update_user_data(
-                    user["telefone"], "cep", int(message.replace("-", ""))
-                )
-                await flow_entity.update_flow_from_user_id(
-                    user["id"], "etapa_registro", flow_status
-                )
-                await send_message("Digite seu CPF\nEx:157.934.724-28", number_formated)
-                return Response(
-                    status_code=status.HTTP_200_OK,
-                    content="Mensagem enviada com sucesso",
-                )
+                if await validate_cep(message):
+                    await register_flow.define_user_cep(user, message, flow_status)
+                    await send_message("Digite seu CPF\nEx:157.934.724-28", number_formated)
+                    return True
+
+                else:
+                    reply = "Por favor, digite uma CEP válido"
+                    await send_message(reply, number_formated)
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST, detail=reply
+                    )
 
             elif user_flow["etapa_registro"] == 5:
                 if await validate_cpf(message):
-                    await user_entity.update_user_data(
-                        user["telefone"],
-                        "cpf",
-                        int(message.replace(".", "").replace("-", "")),
-                    )
-                    await flow_entity.update_flow_from_user_id(
-                        user["id"], "etapa_registro", flow_status
-                    )
+                    await register_flow.define_user_cpf(user, message, flow_status)
                     await send_message(
                         "Digite o número do seu RG\nEx:4563912-9", number_formated
                     )
-                    return Response(
-                        status_code=status.HTTP_200_OK,
-                        content="Mensagem enviada com sucesso",
-                    )
+                    return True
 
                 else:
                     reply = "Por favor, digite um cpf válido"
@@ -296,39 +271,21 @@ class BotDispatcher:
                     )
 
             elif user_flow["etapa_registro"] == 6:
-                await user_entity.update_user_data(
-                    user["telefone"], "rg", int(message.replace("-", ""))
-                )
-                await flow_entity.update_flow_from_user_id(
-                    user["id"], "etapa_registro", flow_status
-                )
+                await register_flow.define_user_rg(user, message, flow_status)
                 await send_message(
-                    "Digite o número do seu cartão do SUS\nEx:145.000.875.165.186",
+                    "Digite o número do seu cartão do SUS\nEx:157.872.171.284.436",
                     number_formated,
                 )
-                return Response(
-                    status_code=status.HTTP_200_OK,
-                    content="Mensagem enviada com sucesso",
-                )
+                return True
 
             elif user_flow["etapa_registro"] == 7:
                 if await validate_cns(str(message).replace(".", "").replace("-", "")):
-                    await user_entity.update_user_data(
-                        user["telefone"],
-                        "c_sus",
-                        float(str(message).replace(".", "").replace("-", "")),
-                    )
-                    await flow_entity.update_flow_from_user_id(
-                        user["id"], "etapa_registro", flow_status
-                    )
+                    await register_flow.define_user_cns(user, message, flow_status)
                     await send_message(
                         "Digite o nome do seu bairro\nEx: Benedito Bentes",
                         number_formated,
                     )
-                    return Response(
-                        status_code=status.HTTP_200_OK,
-                        content="Mensagem enviada com sucesso",
-                    )
+                    return True
 
                 else:
                     reply = "Por favor, digite um cartão nacional de saúde válido"
@@ -338,26 +295,12 @@ class BotDispatcher:
                     )
 
             elif user_flow["etapa_registro"] == 8:
-                await user_entity.update_user_data(
-                    user["telefone"], "bairro", message
-                )
-                await flow_entity.update_flow_from_user_id(
-                    user["id"], "fluxo_registro", 0
-                )
-                await flow_entity.update_flow_from_user_id(
-                    user["id"], "etapa_registro", 0
-                )
-                info = "Usuário cadastrado com êxito"
-                log = await Logging(info).info()
-
+                await register_flow.define_user_district(user, message, flow_status)
                 await send_message(
                     "Parabéns, seu cadastro foi concluído, agora você pode agendar consultas ou exames pelo chat!\nDigite qualquer tecla para ver as opções",
                     number_formated,
                 )
-                return Response(
-                    status_code=status.HTTP_200_OK,
-                    content="Mensagem enviada com sucesso",
-                )
+                return True
 
         except Exception as error:
             message_log = "Erro ao atualizar os dados do usuário no banco de dados"
@@ -384,35 +327,24 @@ class BotDispatcher:
         unities_entity = UnidadeRepository()
         consult_entity = AgendamentosRepository()
         flow_entity = FluxoEtapaRepository()
-
-        user_flow = await flow_entity.select_stage_from_user_id(user["id"])
-        flow_status = user_flow["etapa_agendamento_consulta"] + 1
+        number_formated = f"whatsapp:+" + str(user["telefone"])
+        register_consult_flow = Schedule_consult_flow()
         try:
+            user_flow = await flow_entity.select_stage_from_user_id(int(user["id"]))
+            flow_status = user_flow["etapa_registro"] + 1
             number_formated = f"whatsapp:+" + str(user["telefone"])
             schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
 
             if user_flow["etapa_agendamento_consulta"] == 1:
-                specialty_entity = EspecialidadeRepository()
-
-                specialty_user_request = (
-                    await specialty_entity.select_specialty_from_name(message)
-                )
-                user_flow = await flow_entity.update_flow_from_user_id(
-                    user["id"], "etapa_agendamento_consulta", flow_status
-                )
-
-                consult_data = await consult_entity.update_schedule_from_id(
-                    schedule_data["id"],
-                    "id_especialidade",
-                    specialty_user_request["id"],
-                )
+                await  register_consult_flow.define_specialty_consult(user, message, flow_status)
 
                 await send_message(
                     "Escolha a unidade suportada mais próxima de você\nDigite o número correspondente ao da unidade desejada\nEx: 1",
                     number_formated,
                 )
+                ## Desenvolver microsserviços das unidades para retornar as unidades por chamada de classe
                 unities = await unities_entity.select_all()
-                sleep(0.4)  # transformar em async await
+                sleep(0.4)
 
                 for i in unities:
                     unities_text = f"""Unidade {i['id']}: {i['nome'].split('(')[0]}\nEndereço: {i['endereco'].replace(',','').split('s/n')[0]}\nBairro: {i['bairro']}\nHorario de funcionamento: {i['horario_funcionamento']}"""
@@ -425,55 +357,45 @@ class BotDispatcher:
                 )
 
             elif user_flow["etapa_agendamento_consulta"] == 2:
-                user_flow = await flow_entity.update_flow_from_user_id(
-                    user["id"], "etapa_agendamento_consulta", flow_status
-                )
-                consult_data = await consult_entity.update_schedule_from_id(
-                    schedule_data["id"], "id_unidade", int(message)
-                )
+                consult_data = await register_consult_flow.define_unity_consult(user, int(message), flow_status)
+
                 last_time = (
                     await consult_entity.get_last_time_scheduele_from_specialty_id(
                         int(consult_data["id_especialidade"]),
                         int(consult_data["id_unidade"]),
                     )
                 )
-                if consult_data["id_unidade"] != None:
-                    if last_time != None:
-                        data = await format_date_for_user(
-                            last_time[-1]["data_agendamento"]
-                        )
-                        hora = await format_time_for_user(
-                            last_time[-1]["horario_termino_agendamento"]
-                        )
-                        await send_message(
-                            f"""
-                                Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023\n
-                                Atenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}""",
-                            number_formated,
-                        )
-                        return Response(
-                            status_code=status.HTTP_200_OK,
-                            content="Mensagem enviada com sucesso",
-                        )
-                    else:
-                        await send_message(
-                            f"""Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023""",
-                            number_formated,
-                        )
-                        return Response(
-                            status_code=status.HTTP_200_OK,
-                            content="Mensagem enviada com sucesso",
-                        )
+                if consult_data["id_unidade"] != None and last_time != None:
+                    data = await format_date_for_user(
+                        last_time[-1]["data_agendamento"]
+                    )
+                    hora = await format_time_for_user(
+                        last_time[-1]["horario_termino_agendamento"]
+                    )
+                    await send_message(
+                        f"""
+                            Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023\n
+                            Atenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}""",
+                        number_formated,
+                    )
+                    return Response(
+                        status_code=status.HTTP_200_OK,
+                        content="Mensagem enviada com sucesso",
+                    )
+                else:
+                    await send_message(
+                        f"""Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023""",
+                        number_formated,
+                    )
+                    return Response(
+                        status_code=status.HTTP_200_OK,
+                        content="Mensagem enviada com sucesso",
+                    )
 
             elif user_flow["etapa_agendamento_consulta"] == 3:
                 date = await validate_date_schedule(message)
                 if date["value"]:
-                    user_flow = await flow_entity.update_flow_from_user_id(
-                        user["id"], "etapa_agendamento_consulta", flow_status
-                    )
-                    await consult_entity.update_schedule_from_id(
-                        schedule_data["id"], "data_agendamento", date["date"]
-                    )
+                    await register_consult_flow.define_date_consult(user, date['date'], flow_status)
                     await send_message(
                         "Digite o horário que deseja realizar a consulta (atente-se para o horário estar dentro do período de funcionamento da unidade escolhida)\nEx: 08:00",
                         number_formated,
@@ -514,20 +436,7 @@ class BotDispatcher:
                         content="Mensagem enviada com sucesso",
                     )
                 else:
-                    user_flow = await flow_entity.update_flow_from_user_id(
-                        user["id"], "etapa_agendamento_consulta", flow_status
-                    )
-                    final_schedule = await get_more_forty_five(str(message))
-                    consult_data = await consult_entity.update_schedule_from_id(
-                        schedule_data["id"],
-                        "horario_inicio_agendamento",
-                        await convert_to_datetime(str(message) + ":00"),
-                    )
-                    consult_data = await consult_entity.update_schedule_from_id(
-                        schedule_data["id"],
-                        "horario_termino_agendamento",
-                        await convert_to_datetime(final_schedule),
-                    )
+                    await register_consult_flow.define_time_consult(user, message, flow_status)
                     await send_message(
                         "(Opcional) Digite uma mensagem descrevendo qual a sua necessidade para a especialidade escolhida.\nEx: Exame de rotina\nVocê pode digitar qualquer coisa para ignorar essa etapa)",
                         number_formated,
@@ -538,18 +447,9 @@ class BotDispatcher:
                     )
 
             elif user_flow["etapa_agendamento_consulta"] == 5:
-                user_flow = await flow_entity.update_flow_from_user_id(
-                    user["id"], "etapa_agendamento_consulta", 0
-                )
-                user_flow = await flow_entity.update_flow_from_user_id(
-                    user["id"], "fluxo_agendamento_consulta", 0
-                )
-                consult_data = await consult_entity.update_schedule_from_id(
-                    schedule_data["id"], "descricao_necessidade", str(message)
-                )
-                all_data = await consult_entity.select_all_data_from_schedule_with_id(
-                    consult_data["id"]
-                )
+                await register_consult_flow.define_specialty_consult(user, message, flow_status)
+                all_data = await register_consult_flow.finalize_schedule_flow(user, message, flow_status)
+
                 await send_message(
                     f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {await format_date_for_user(all_data['data_agendamento'])} as {await format_time_for_user(all_data['horario_inicio_agendamento'])} horas para a sua consulta com o {all_data['specialty_info']['nome']}",
                     number_formated,

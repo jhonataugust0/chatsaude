@@ -1,5 +1,5 @@
+import os
 from typing import Any, Dict, List, Optional, Union
-
 from fastapi import HTTPException, Response, status
 from sqlalchemy import (MetaData, and_, delete, desc, select, text, tuple_,
                         update)
@@ -7,16 +7,21 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from api.log.logging import Logging
 
-from ..configs.connection import Connection
-from ..entities.agendamentos_model import Agendamentos
-from ..entities.especialidade_model import Especialidade
-from ..entities.unidade_model import Unidade
-from ..entities.user_model import Usuario
-from ..repository.especialidade_repository import EspecialidadeRepository
-from ..repository.unidade_repository import UnidadeRepository
+from .....models.configs.connection import Connection
+from ..entity.agendamentos_model import Agendamentos
+from ....models.entities.especialidade_model import Especialidade
+from ....health_unit.models.entity.unidade_model import Unidade
+from ....user.models.entity.user_model import Usuario
+from .....models.repository.especialidade_repository import EspecialidadeRepository
+from ....health_unit.models.repository.unidade_repository import UnidadeRepository
 
 
-class AgendamentosRepository:
+class AgendamentosRepository(Connection):
+    connection_url = os.environ.get("CONNECTION_URL")
+
+    def __init__(self):
+        super().__init__(AgendamentosRepository.connection_url)
+
     async def select_all(self) -> List[Dict[str, Agendamentos]]:
         """
             Método responsável por resgatar todos os agendamentos

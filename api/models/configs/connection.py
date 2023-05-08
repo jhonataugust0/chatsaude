@@ -7,8 +7,8 @@ from sqlalchemy.orm import sessionmaker
 
 
 class Connection:
-    def __init__(self):
-        self.url_connection = os.environ.get("CONNECTION_URL")
+    def __init__(self, connection_url):
+        self.url_connection = connection_url
         self.engine = None
         self.async_session = None
         self.sql_meta = MetaData()

@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, List, Optional, Union
 
 from fastapi import HTTPException, Response, status
@@ -6,11 +7,16 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from api.log.logging import Logging
 
-from ..configs.connection import Connection
-from ..entities.fluxo_etapa_model import FluxoEtapa
+from .....models.configs.connection import Connection
+from ..entity.fluxo_etapa_model import FluxoEtapa
 
 
-class FluxoEtapaRepository:
+class FluxoEtapaRepository(Connection):
+    connection_url = os.environ.get("CONNECTION_URL")
+
+    def __init__(self):
+        super().__init__(FluxoEtapaRepository.connection_url)
+
     async def select_all(self) -> List[Dict[str, FluxoEtapa]]:
         """
             Resgata todas as linhas da tabela fluxo_etapa

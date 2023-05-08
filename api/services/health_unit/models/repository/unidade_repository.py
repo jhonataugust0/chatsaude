@@ -1,16 +1,21 @@
+import os
 from typing import Any, Dict, List, Optional
-
 from fastapi import HTTPException, Response, status
 from sqlalchemy import MetaData, delete, select, update
 from sqlalchemy.orm.exc import NoResultFound
 
 from api.log.logging import Logging
-from api.models.entities.unidade_model import Unidade
+from api.services.health_unit.models.entity.unidade_model import Unidade
 
-from ..configs.connection import Connection
+from .....models.configs.connection import Connection
 
 
-class UnidadeRepository:
+class UnidadeRepository(Connection):
+    connection_url = os.environ.get("CONNECTION_URL")
+
+    def __init__(self):
+        super().__init__(UnidadeRepository.connection_url)
+
     async def select_all(self) -> List[Dict[str, Unidade]]:
         async with Connection() as connection:
             """

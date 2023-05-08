@@ -6,8 +6,8 @@ from fastapi import (APIRouter, Body, Depends, HTTPException, Request,
 from api.bot.dispatcher import BotDispatcher, BotOptions
 from api.bot.replies import Replies
 from api.log.logging import Logging
-from api.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
-from api.models.repository.user_repository import UserRepository
+from api.services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
+from api.services.user.models.repository.user_repository import UserRepository
 from api.utils.bot_utils import send_message
 
 
