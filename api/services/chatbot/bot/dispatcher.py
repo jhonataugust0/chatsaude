@@ -13,12 +13,10 @@ from api.services.user_flow.models.repository.fluxo_etapa_repository import Flux
 from api.services.health_unit.models.repository.unidade_repository import UnidadeRepository
 from api.services.user.models.repository.user_repository import UserRepository
 from ..utils.bot_utils import send_message
-from ..utils.validators.validate_cep import validate_cep
-from ..utils.validators.validate_c_sus import validate_cns
-from ..utils.validators.validate_cpf import validate_cpf
-from ..utils.validators.validate_email import validate_email
-from ..utils.validators.validate_times import (validate_date_schedule,
-                                                 validate_nascent_date)
+
+from validators.document_validator import Document_validator
+from validators.input_validator import Input_validator
+
 from ..utils.date import (convert_to_datetime, format_date_for_user,
                             format_time_for_user, get_more_forty_five)
 
@@ -209,7 +207,7 @@ class BotDispatcher:
                 return True
 
             elif user_flow["etapa_registro"] == 2:
-                if await validate_email(message):
+                if await Input_validator.validate_email(message):
                     await register_flow.define_user_email(user, message, flow_status)
                     await send_message(
                         "Digite sua data de nascimento\nEx:12/12/1997", number_formated
@@ -224,7 +222,7 @@ class BotDispatcher:
                     )
 
             elif user_flow["etapa_registro"] == 3:
-                nescient_date = await validate_nascent_date(message)
+                nescient_date = await Input_validator.validate_nascent_date(message)
 
                 if nescient_date["value"]:
                     await register_flow.define_user_nascent_date(
@@ -243,7 +241,7 @@ class BotDispatcher:
                     )
 
             elif user_flow["etapa_registro"] == 4:
-                if await validate_cep(message):
+                if await Document_validator.validate_cep(message):
                     await register_flow.define_user_cep(user, message, flow_status)
                     await send_message("Digite seu CPF\nEx:157.934.724-28", number_formated)
                     return True
@@ -256,7 +254,7 @@ class BotDispatcher:
                     )
 
             elif user_flow["etapa_registro"] == 5:
-                if await validate_cpf(message):
+                if await Document_validator.validate_cpf(message):
                     await register_flow.define_user_cpf(user, message, flow_status)
                     await send_message(
                         "Digite o número do seu RG\nEx:4563912-9", number_formated
@@ -279,7 +277,7 @@ class BotDispatcher:
                 return True
 
             elif user_flow["etapa_registro"] == 7:
-                if await validate_cns(str(message).replace(".", "").replace("-", "")):
+                if await Document_validator.validate_cns(str(message).replace(".", "").replace("-", "")):
                     await register_flow.define_user_cns(user, message, flow_status)
                     await send_message(
                         "Digite o nome do seu bairro\nEx: Benedito Bentes",
@@ -393,7 +391,7 @@ class BotDispatcher:
                     )
 
             elif user_flow["etapa_agendamento_consulta"] == 3:
-                date = await validate_date_schedule(message)
+                date = await Input_validator.validate_date_schedule(message)
                 if date["value"]:
                     await register_consult_flow.define_date_consult(user, date['date'], flow_status)
                     await send_message(
