@@ -12,12 +12,15 @@ from ..entity.user_model import Usuario
 
 
 class UserRepository:
+    def __init__(self):
+        self.connection_url = os.environ.get('CONNECTION_URL')
+
     async def select_all(self) -> List[Dict[str, Usuario]]:
         """
             Método que retorna todos os usuários do banco de
             dados
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = select(Usuario)
                 result = await connection.execute(query)
@@ -51,7 +54,7 @@ class UserRepository:
         Busca no banco a linha de dados do usuário informado
           :params cellphone: int
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = select(Usuario).where(Usuario.telefone == cellphone)
                 result = await connection.execute(query)
@@ -85,7 +88,7 @@ class UserRepository:
         Inserta uma nova linha na tabela de usuarios
           :params telefone: int
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = Usuario(telefone=telefone)
                 connection.add(query)
@@ -124,7 +127,7 @@ class UserRepository:
         :params table: str
         :params input_data: int
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = (
                     update(Usuario)
@@ -165,7 +168,7 @@ class UserRepository:
                 await connection.close()
 
     async def delete(self, cellphone) -> bool:
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 await connection.execute(
                     Usuario.delete().where(Usuario.telefone == cellphone)

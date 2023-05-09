@@ -10,6 +10,8 @@ from .....models.configs.connection import Connection
 from ..entity.especialidade_model import Especialidade
 
 class EspecialidadeRepository:
+    def __init__(self):
+        self.connection_url = os.environ.get('CONNECTION_URL')
 
     async def select_all(self) -> List[Dict[str, Especialidade]]:
         """
@@ -18,7 +20,7 @@ class EspecialidadeRepository:
 
             :return: list
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = select(Especialidade)
                 result = await connection.execute(query)
@@ -49,7 +51,7 @@ class EspecialidadeRepository:
             :param name: str
             :return: dict
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = (
                     select(Especialidade)
@@ -85,7 +87,7 @@ class EspecialidadeRepository:
                 await connection.close()
 
     async def select_specialty_from_id(self, id: int) -> Dict[str, Especialidade]:
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             """
                 Método responsável por resgatar os dados de
                 uma especialidade através do seu id
@@ -124,7 +126,7 @@ class EspecialidadeRepository:
             :params name: str
             :return: dict
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = Especialidade(name=name)
                 connection.add(query)
@@ -160,7 +162,7 @@ class EspecialidadeRepository:
             :param input_data: str
             :return: dict
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = (
                     update(Especialidade)
@@ -207,7 +209,7 @@ class EspecialidadeRepository:
             :params name: str
             :return: bool
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 await connection.execute(Especialidade.delete()).where(
                     Especialidade.name == name

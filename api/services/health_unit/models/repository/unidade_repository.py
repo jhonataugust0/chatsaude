@@ -11,9 +11,11 @@ from .....models.configs.connection import Connection
 
 
 class UnidadeRepository:
+    def __init__(self):
+        self.connection_url = os.environ.get('CONNECTION_URL')
 
     async def select_all(self) -> List[Dict[str, Unidade]]:
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             """
                 Método responsável por resgatar todas as unidades
                 registradas no banco de dados
@@ -50,7 +52,7 @@ class UnidadeRepository:
 
             :params unity_id: int
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = select(Unidade).where(Unidade.id == unity_id)
                 result = await connection.execute(query)
@@ -87,7 +89,7 @@ class UnidadeRepository:
             :params district: str
             return dict
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = select(Unidade).where(Unidade.bairro == district)
                 result = await connection.execute(query)
@@ -122,7 +124,7 @@ class UnidadeRepository:
             :params name: str
             return dict
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = Unidade(nome=name)
                 connection.add(query)
@@ -156,7 +158,7 @@ class UnidadeRepository:
             :params table: str
             :params input_data: int
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = (
                     update(Unidade)
@@ -203,7 +205,7 @@ class UnidadeRepository:
 
             params: unity_id: int
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 await connection.execute(Unidade.delete().where(Unidade.id == unity_id))
                 await connection.commit()

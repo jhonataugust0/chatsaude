@@ -12,12 +12,15 @@ from ..entity.fluxo_etapa_model import FluxoEtapa
 
 
 class FluxoEtapaRepository:
+    def __init__(self):
+        self.connection_url = os.environ.get('CONNECTION_URL')
+
     async def select_all(self) -> List[Dict[str, FluxoEtapa]]:
         """
             Resgata todas as linhas da tabela fluxo_etapa
             return dict
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = select(FluxoEtapa)
                 result = await connection.execute(query)
@@ -50,7 +53,7 @@ class FluxoEtapaRepository:
             :params user_id: int
         """
 
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = select(FluxoEtapa).where(FluxoEtapa.id_usuario == user_id)
                 result = await connection.execute(query)
@@ -86,7 +89,7 @@ class FluxoEtapaRepository:
             :params flow: int - estado da coluna
             :params status: int - valor de etapa da coluna
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = FluxoEtapa(
                     id_usuario=user_id,
@@ -133,7 +136,7 @@ class FluxoEtapaRepository:
             :params table: str
             :params input_data: int
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = (
                     update(FluxoEtapa)
@@ -175,7 +178,7 @@ class FluxoEtapaRepository:
 
         params: user_id: int
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 await connection.execute(FluxoEtapa.delete()).where(
                     FluxoEtapa.id == user_id

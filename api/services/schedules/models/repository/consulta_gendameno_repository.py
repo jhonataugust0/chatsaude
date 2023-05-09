@@ -17,6 +17,8 @@ from ....health_unit.models.repository.unidade_repository import UnidadeReposito
 
 
 class AgendamentosRepository:
+    def __init__(self):
+        self.connection_url = os.environ.get('CONNECTION_URL')
 
     async def select_all(self) -> List[Dict[str, Agendamentos]]:
         """
@@ -25,7 +27,7 @@ class AgendamentosRepository:
 
             :return: list
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = select(Agendamentos)
                 result = await connection.execute(query)
@@ -56,7 +58,7 @@ class AgendamentosRepository:
             :params user_id: int
             return dict
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = (
                     select(Agendamentos)
@@ -101,7 +103,7 @@ class AgendamentosRepository:
             :params id: int
             return dict
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = select(Agendamentos).where(Agendamentos.id == id)
                 result = await connection.execute(query)
@@ -150,7 +152,7 @@ class AgendamentosRepository:
             :params user_id: int
             return dict
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = (
                     select(Agendamentos, Usuario)
@@ -193,7 +195,7 @@ class AgendamentosRepository:
           :params user_id: int - id do usuário
           :params specialty: str - especialidade do agendamento
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = Agendamentos(
                     id_usuario=user_id, tipo_agendamento="Consulta", ativo=1
@@ -233,7 +235,7 @@ class AgendamentosRepository:
             :params table: str
             :params input_data: int
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = (
                     update(Agendamentos)
@@ -283,7 +285,7 @@ class AgendamentosRepository:
             :params table: str
             :params input_data: int
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = (
                     update(Agendamentos)
@@ -332,7 +334,7 @@ class AgendamentosRepository:
 
             params: user_id: int
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 await connection.execute(Agendamentos.delete()).where(
                     Agendamentos.id == user_id
@@ -372,7 +374,7 @@ class AgendamentosRepository:
             :params unity_id: int
             :return: dict
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 columns = [
                     Agendamentos.data_agendamento,
@@ -440,7 +442,7 @@ class AgendamentosRepository:
           :params id: int
           :return: bool
         """
-        async with Connection() as connection:
+        async with Connection(connection_url=self.connection_url) as connection:
             try:
                 query = await connection.execute(
                     text(
