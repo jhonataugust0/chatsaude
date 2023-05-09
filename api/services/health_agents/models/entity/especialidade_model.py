@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from sqlalchemy import VARCHAR, Column, ForeignKey, Integer
 
-from ..configs.base import Base
+from .....models.configs.base import Base
 
 
 class Especialidade(Base):

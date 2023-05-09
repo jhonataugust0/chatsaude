@@ -14,8 +14,8 @@ from api.services.health_unit.models.repository.unidade_repository import Unidad
 from api.services.user.models.repository.user_repository import UserRepository
 from ..utils.bot_utils import send_message
 
-from validators.document_validator import Document_validator
-from validators.input_validator import Input_validator
+from .validators.document_validator import Document_validator
+from .validators.input_validator import Input_validator
 
 from ..utils.date import (convert_to_datetime, format_date_for_user,
                             format_time_for_user, get_more_forty_five)
@@ -329,7 +329,7 @@ class BotDispatcher:
         register_consult_flow = Schedule_consult_flow()
         try:
             user_flow = await flow_entity.select_stage_from_user_id(int(user["id"]))
-            flow_status = user_flow["etapa_registro"] + 1
+            flow_status = user_flow["etapa_agendamento_consulta"] + 1
             number_formated = f"whatsapp:+" + str(user["telefone"])
             schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
 
@@ -445,7 +445,7 @@ class BotDispatcher:
                     )
 
             elif user_flow["etapa_agendamento_consulta"] == 5:
-                await register_consult_flow.define_specialty_consult(user, message, flow_status)
+                await register_consult_flow.define_necessity_consult(user, message, flow_status)
                 all_data = await register_consult_flow.finalize_schedule_flow(user, message, flow_status)
 
                 await send_message(

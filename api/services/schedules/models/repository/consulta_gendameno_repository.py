@@ -9,18 +9,14 @@ from api.log.logging import Logging
 
 from .....models.configs.connection import Connection
 from ..entity.agendamentos_model import Agendamentos
-from ....models.entities.especialidade_model import Especialidade
 from ....health_unit.models.entity.unidade_model import Unidade
 from ....user.models.entity.user_model import Usuario
-from .....models.repository.especialidade_repository import EspecialidadeRepository
+from ....health_agents.models.entity.especialidade_model import Especialidade
+from ....health_agents.models.repository.especialidade_repository import EspecialidadeRepository
 from ....health_unit.models.repository.unidade_repository import UnidadeRepository
 
 
-class AgendamentosRepository(Connection):
-    connection_url = os.environ.get("CONNECTION_URL")
-
-    def __init__(self):
-        super().__init__(AgendamentosRepository.connection_url)
+class AgendamentosRepository:
 
     async def select_all(self) -> List[Dict[str, Agendamentos]]:
         """

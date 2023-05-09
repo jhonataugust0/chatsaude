@@ -3,12 +3,12 @@ from urllib.parse import parse_qs
 from fastapi import (APIRouter, Body, Depends, HTTPException, Request,
                      Response, status)
 
-from api.bot.dispatcher import BotDispatcher, BotOptions
-from api.bot.replies import Replies
+from ..services.chatbot.bot.dispatcher import BotDispatcher, BotOptions
+from ..services.chatbot.bot.replies import Replies
 from api.log.logging import Logging
 from api.services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
 from api.services.user.models.repository.user_repository import UserRepository
-from api.utils.bot_utils import send_message
+from ..services.chatbot.utils.bot_utils import send_message
 
 
 class Bot:

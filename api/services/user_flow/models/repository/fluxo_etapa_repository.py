@@ -11,12 +11,7 @@ from .....models.configs.connection import Connection
 from ..entity.fluxo_etapa_model import FluxoEtapa
 
 
-class FluxoEtapaRepository(Connection):
-    connection_url = os.environ.get("CONNECTION_URL")
-
-    def __init__(self):
-        super().__init__(FluxoEtapaRepository.connection_url)
-
+class FluxoEtapaRepository:
     async def select_all(self) -> List[Dict[str, FluxoEtapa]]:
         """
             Resgata todas as linhas da tabela fluxo_etapa

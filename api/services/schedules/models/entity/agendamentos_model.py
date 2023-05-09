@@ -2,8 +2,6 @@ from typing import Any, Dict
 
 from sqlalchemy import (VARCHAR, BigInteger, Column, Date, ForeignKey, Integer,
                         Text, Time)
-from sqlalchemy.orm import relationship, selectinload, sessionmaker
-
 from .....models.configs.base import Base
 from ....health_unit.models.entity.unidade_model import Unidade
 

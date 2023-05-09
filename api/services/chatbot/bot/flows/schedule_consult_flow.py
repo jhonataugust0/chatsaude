@@ -33,7 +33,7 @@ class Schedule_consult_flow:
             specialty_user_request = (
                 await specialty_entity.select_specialty_from_name(message)
             )
-            user_flow = await flow_entity.update_flow_from_user_id(
+            await flow_entity.update_flow_from_user_id(
                 user["id"], "etapa_agendamento_consulta", flow_status
             )
             consult_data = await consult_entity.update_schedule_from_id(
@@ -41,10 +41,7 @@ class Schedule_consult_flow:
                 "id_especialidade",
                 specialty_user_request["id"],
             )
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content="Especialidade registrada com sucesso",
-            )
+            return consult_data
 
         except Exception as error:
             message_log = "Erro ao registrar a especialidade da consulta no banco de dados"
@@ -80,10 +77,7 @@ class Schedule_consult_flow:
             consult_data = await consult_entity.update_schedule_from_id(
                 schedule_data["id"], "id_unidade", message
             )
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content="Unidade registrada com sucesso",
-            )
+            return consult_data
 
         except Exception as error:
             message_log = "Erro ao registrar a unidade da consulta no banco de dados"
@@ -165,10 +159,7 @@ class Schedule_consult_flow:
                 "horario_termino_agendamento",
                 await convert_to_datetime(final_schedule),
             )
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content="Mensagem enviada com sucesso",
-            )
+            return consult_data
 
         except Exception as error:
             message_log = "Erro ao registrar a hora da consulta no banco de dados"
@@ -199,10 +190,7 @@ class Schedule_consult_flow:
             consult_data = await consult_entity.update_schedule_from_id(
                 schedule_data["id"], "descricao_necessidade", str(message)
             )
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content="Necessidade registrada com sucesso",
-            )
+            consult_data
 
         except Exception as error:
             message_log = "Erro ao registrar a necessidade do usuário no banco de dados!"
@@ -238,7 +226,7 @@ class Schedule_consult_flow:
             all_data = await consult_entity.select_all_data_from_schedule_with_id(
                 schedule_data["id"]
             )
-            return {'all_data': all_data, 'status_code': status.HTTP_200_OK, 'content': "Fluxo encerrado com sucesso"}
+            return all_data
 
         except Exception as error:
             message_log = "Erro ao finalizar o fluxo de agendamento de consulta"

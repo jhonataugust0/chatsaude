@@ -6,7 +6,15 @@ import pytest
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
+
+# adiciona o caminho do diretório raiz do projeto ao sys.path
+sys.path.insert(0, PROJECT_ROOT)
+
+# adiciona o caminho do diretório do serviço de chatbot ao sys.path
+chatbot_dir = os.path.join(PROJECT_ROOT, 'api', 'services', 'chatbot')
+sys.path.insert(0, chatbot_dir)
+
 from main import app
 
 

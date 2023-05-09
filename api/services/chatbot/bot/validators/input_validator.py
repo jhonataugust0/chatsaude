@@ -65,7 +65,7 @@ class Input_validator():
 
                 # compare_hour = datetime.datetime.strptime(current_hour, "%Y-%m-%d")
 
-                hour_informed = datetime.datetime.strptime(new_date, "%Y-%m-%d")
+                hour_informed = datetime.strptime(new_date, "%Y-%m-%d")
                 # hour_informed = datetime.datetime.strftime(hour_informed,"%Y-%m-%d")
                 # if hour_informed >= compare_hour:
                 #   hour_informed = datetime.datetime.strftime(hour_informed, "%Y-%m-%d")

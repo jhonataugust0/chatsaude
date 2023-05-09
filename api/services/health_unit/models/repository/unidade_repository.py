@@ -10,11 +10,7 @@ from api.services.health_unit.models.entity.unidade_model import Unidade
 from .....models.configs.connection import Connection
 
 
-class UnidadeRepository(Connection):
-    connection_url = os.environ.get("CONNECTION_URL")
-
-    def __init__(self):
-        super().__init__(UnidadeRepository.connection_url)
+class UnidadeRepository:
 
     async def select_all(self) -> List[Dict[str, Unidade]]:
         async with Connection() as connection:

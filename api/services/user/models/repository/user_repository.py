@@ -11,12 +11,7 @@ from .....models.configs.connection import Connection
 from ..entity.user_model import Usuario
 
 
-class UserRepository(Connection):
-    connection_url = os.environ.get("CONNECTION_URL")
-
-    def __init__(self):
-        super().__init__(UserRepository.connection_url)
-
+class UserRepository:
     async def select_all(self) -> List[Dict[str, Usuario]]:
         """
             Método que retorna todos os usuários do banco de
