@@ -176,7 +176,7 @@ class Register_user_flow:
             await user_entity.update_user_data(
                 user["telefone"],
                 "cpf",
-                int(message.replace(".", "").replace("-", "")),
+                message,
             )
             await flow_entity.update_flow_from_user_id(
                 user["id"], "etapa_registro", flow_status

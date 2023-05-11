@@ -69,7 +69,7 @@ class Input_validator():
                 # hour_informed = datetime.datetime.strftime(hour_informed,"%Y-%m-%d")
                 # if hour_informed >= compare_hour:
                 #   hour_informed = datetime.datetime.strftime(hour_informed, "%Y-%m-%d")
-                return {"date": hour_informed, "value": True}
+                return hour_informed
 
         except Exception as error:
             message_log = f"Erro ao validar a data {date}"

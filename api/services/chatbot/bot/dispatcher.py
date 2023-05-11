@@ -32,77 +32,96 @@ class BotDispatcher:
     def __init__(self, lang="br") -> None:
         self.lang = lang
 
+    async def schedule_consult_trigger(self, verify_stage_user, cellphone):
+        if "fluxo_agendamento_consulta" in verify_stage_user and (
+                verify_stage_user["fluxo_agendamento_consulta"] == None
+                or verify_stage_user["fluxo_agendamento_consulta"] < 1
+            ):
+            await send_message(str(Replies.SCHEDULE_CONSULT), f"whatsapp:{str(cellphone)}")
+            return {"schedule_consult_trigger": 1}
+
+
+    async def schedule_exam_trigger(self, verify_stage_user):
+        if ("fluxo_agendamento_exame" in verify_stage_user and (
+                verify_stage_user["fluxo_agendamento_exame"] == None
+                or verify_stage_user["fluxo_agendamento_exame"] == 0
+            ) and (
+                verify_stage_user["fluxo_agendamento_consulta"] == None
+                or verify_stage_user["fluxo_agendamento_consulta"] == 0
+            )
+        ):
+            return {
+                "message": str(Replies.SCHEDULE_EXAM),
+                "schedule_exam_trigger": 1,
+            }
+
+
+    async def make_report_trigger(self):
+        return {"message": str(Replies.REPORT), "make_report_trigger": 1}
+
+
+    async def register_user_trigger(self, user_dict, cellphone):
+        if "id" not in user_dict:
+            await send_message(str(Replies.INIT_REGISTER_FLOW), f"whatsapp:{str(cellphone)}")
+            return {"register_user_trigger": 1}
+
+
+    async def default_reply(self, verify_stage_user):
+        if (
+            (
+                verify_stage_user["fluxo_agendamento_consulta"] == None
+                or verify_stage_user["fluxo_agendamento_consulta"] == 0
+            )
+            and (
+                verify_stage_user["fluxo_agendamento_exame"] == None
+                or verify_stage_user["fluxo_agendamento_exame"] == 0
+            )
+            and (
+                verify_stage_user["fluxo_agendamento_exame"] == None
+                or verify_stage_user["fluxo_agendamento_exame"] == 0
+            )
+        ):
+            return {"message": str(Replies.DEFAULT)}
+
+
+    async def default_new_user_reply(self, user_dict):
+        if "id" not in user_dict or user_dict["id"] == None:
+            return {"message": str(Replies.DEFAULT_NEW_USER)}
+        else:
+            return {}
+
     async def message_processor(self, message: str, cellphone: int, user_dict: dict = None) -> dict[str]:
         """
-            Método que processa as inputs do usuário, identificando-as e atribuindo as
-            mesmas seus respectivos gatilhos para a continuidade do fluxo da aplicação.
-            :params message: str
-            :params cellphone: int
-            return dict | Response: Response
+        Método que processa as inputs do usuário, identificando-as e atribuindo as
+        mesmas seus respectivos gatilhos para a continuidade do fluxo da aplicação.
+        :params message: str
+        :params cellphone: int
+        return dict | Response: Response
         """
         try:
-            if "telefone" in user_dict and user_dict["telefone"] != None:
-                if "id" in user_dict and user_dict["id"] != None:
-                    flow_entity = FluxoEtapaRepository()
-                    verify_stage_user = await flow_entity.select_stage_from_user_id(user_dict["id"])
+            if user_dict is not None and user_dict.get("telefone") is not None:
+                flow_entity = FluxoEtapaRepository()
+                verify_stage_user = await flow_entity.select_stage_from_user_id(user_dict["id"])
 
                 if message == BotOptions.SCHEDULE_CONSULT:
-                    if "fluxo_agendamento_consulta" in verify_stage_user and (
-                        verify_stage_user["fluxo_agendamento_consulta"] == None
-                        or verify_stage_user["fluxo_agendamento_consulta"] < 1
-                    ):
-                        await send_message(
-                            str(Replies.SCHEDULE_CONSULT), f"whatsapp:{str(cellphone)}"
-                        ),
-                        return {"schedule_consult_trigger": 1}
+                    response = await self.schedule_consult_trigger(verify_stage_user, cellphone)
 
                 elif message == BotOptions.SCHEDULE_EXAM:
-                    if ("fluxo_agendamento_exame" in verify_stage_user and (
-                            verify_stage_user["fluxo_agendamento_exame"] == None
-                            or verify_stage_user["fluxo_agendamento_exame"] == 0
-                        ) and (
-                            verify_stage_user["fluxo_agendamento_consulta"] == None
-                            or verify_stage_user["fluxo_agendamento_consulta"] == 0
-                        )
-                    ):
-                        return {
-                            "message": str(Replies.SCHEDULE_EXAM),
-                            "schedule_exam_trigger": 1,
-                        }
+                    response = await self.schedule_exam_trigger(verify_stage_user)
 
                 elif message == BotOptions.MAKE_REPORT:
-                    return {"message": str(Replies.REPORT), "make_report_trigger": 1}
+                    response = await self.make_report_trigger()
 
                 else:
-                    if (
-                        (
-                            verify_stage_user["fluxo_agendamento_consulta"] == None
-                            or verify_stage_user["fluxo_agendamento_consulta"] == 0
-                        )
-                        and (
-                            verify_stage_user["fluxo_agendamento_exame"] == None
-                            or verify_stage_user["fluxo_agendamento_exame"] == 0
-                        )
-                        and (
-                            verify_stage_user["fluxo_agendamento_exame"] == None
-                            or verify_stage_user["fluxo_agendamento_exame"] == 0
-                        )
-                    ):
-                        return {"message": str(Replies.DEFAULT)}
+                    response = await self.default_reply(verify_stage_user)
 
-            if message == BotOptions.REGISTER_USER:
-                if "id" not in user_dict:
-                    await send_message(
-                        str(Replies.INIT_REGISTER_FLOW), f"whatsapp:{str(cellphone)}"
-                    )
-                    return {"register_user_trigger": 1}
+            elif message == BotOptions.REGISTER_USER:
+                response = await self.register_user_trigger(user_dict, cellphone)
 
             else:
-                user_entity = FluxoEtapaRepository()
-                if "id" in user_dict and user_dict["id"] != None:
-                    return {}
-                else:
-                    return {"message": str(Replies.DEFAULT_NEW_USER)}
+                response = await self.default_new_user_reply(user_dict)
+
+            return response
 
         except Exception as error:
             message_log = f"Erro ao processar a input do usuário {message}"
@@ -118,56 +137,47 @@ class BotDispatcher:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
+    async def insert_user_and_flow(self, number: int):
+        user_entity = UserRepository()
+        stage_entity = FluxoEtapaRepository()
+
+        new_user = await user_entity.insert_new_user(number)
+        await stage_entity.insert_new_user_flow(new_user["id"], 1, 1)
+
     async def trigger_processing(self, bot_response: dict, number: int, user: dict = None) -> Response:
         try:
             stage_entity = FluxoEtapaRepository()
             user_entity = UserRepository()
+            schedule_entity = AgendamentosRepository()
 
-            if ("register_user_trigger" in bot_response
-                and bot_response["register_user_trigger"] == 1
-            ):
-                new_user = await user_entity.insert_new_user(number)
-                await stage_entity.insert_new_user_flow(new_user["id"], 1, 1)
-                return Response(
-                    status_code=status.HTTP_200_OK,
-                    content="Usuário inserido com sucesso",
-                )
+            trigger_actions = {
+                "register_user_trigger": {
+                        "action": [lambda: self.insert_user_and_flow(number)],
+                        "message": "Usuário inserido com sucesso",
+                    },
+                    "schedule_consult_trigger": {
+                        "action": [lambda: schedule_entity.insert_new_schedule_consult(user["id"])],
+                        "message": "Agendamento de consulta iniciado com sucesso",
+                    },
+                    # "schedule_exam_trigger": {
+                    #     "action": lambda: await schedule_entity.schedule_new_exam(user["id"], stage_entity, exam_entity),
+                    #     "message": "Agendamento de exame iniciado com sucesso",
+                    # },
+                    # "make_report_trigger": {
+                    #     "action": lambda: await schedule_entity.make_report(user, report_entity),
+                    #     "message": "Relatório gerado com sucesso",
+                    # },
+            }
 
-            elif (
-                "schedule_consult_trigger" in bot_response
-                and bot_response["schedule_consult_trigger"] == 1
-            ):
-                consult_entity = AgendamentosRepository()
-                verify_exists_flow = await stage_entity.select_stage_from_user_id(user["id"])
+            for trigger in bot_response:
+                if trigger in trigger_actions and bot_response[trigger] == 1:
+                    for func in trigger_actions[trigger]["action"]:
+                        await func()
 
-                if "fluxo_agendamento_consulta" in verify_exists_flow and (
-                    verify_exists_flow["fluxo_agendamento_consulta"] == 0
-                    or verify_exists_flow["fluxo_agendamento_consulta"] == None
-                ):
-                    await stage_entity.update_flow_from_user_id(
-                        user["id"], "fluxo_agendamento_consulta", 1
-                    )
-                    await stage_entity.update_flow_from_user_id(
-                        user["id"], "etapa_agendamento_consulta", 0
-                    )
-                    await consult_entity.insert_new_schedule_consult(user["id"])
                     return Response(
                         status_code=status.HTTP_200_OK,
-                        content="Agendamento de consulta iniciado com sucesso",
+                        content=trigger_actions[trigger]["message"],
                     )
-
-            elif (
-                "register_user_trigger" in bot_response
-                and bot_response["register_user_trigger"] == 1
-            ):
-                pass
-
-            elif (
-                "register_user_trigger" in bot_response
-                and bot_response["register_user_trigger"] == 1
-            ):
-                pass
-
         except Exception as error:
             message_log = f"Erro ao processar os gatilhos {bot_response}"
             log = Logging(message_log)
@@ -182,123 +192,84 @@ class BotDispatcher:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
+    def get_prompt(self, current_step: int, next_step: int) -> str:
+        """
+        Retorna a mensagem para ser enviada ao usuário.
+        :param current_step: Etapa atual da conversa
+        :param next_step: Próxima etapa da conversa
+        :return: Mensagem a ser enviada ao usuário
+        """
+        if current_step == 1:
+            if next_step == 2:
+                return "Digite seu melhor email\nEx:maria.fatima@gmail.com"
+        elif current_step == 2:
+            if next_step == 3:
+                return "Digite sua data de nascimento\nEx:12/12/1997"
+        elif current_step == 3:
+            if next_step == 4:
+                return "Digite seu CEP\nEx:56378-921"
+        elif current_step == 4:
+            if next_step == 5:
+                return "Confirme as informações abaixo:\nNome: {nome}\nEmail: {email}\nData de nascimento: {data_nascimento}\nCEP: {cep}\nPara confirmar, digite 'sim'. Caso deseje corrigir alguma informação, digite 'nao' e siga as instruções."
+        return ""
+
     async def data_users_update_flow(self, user: dict, message: str):
         """
         Método responsável por orquestar os inputs do usuário
         para os métodos corretos das classes de fluxo para a
         execução de uma conversa com o chatbot.
-          :params user: dict
-          :params message: string
+        :params user: dict
+        :params message: string
         """
         flow_entity = FluxoEtapaRepository()
         register_flow = Register_user_flow()
         number_formated = f"whatsapp:+" + str(user["telefone"])
+        flow_status = None
 
         try:
             user_flow = await flow_entity.select_stage_from_user_id(int(user["id"]))
             flow_status = user_flow["etapa_registro"] + 1
 
-            if user_flow["etapa_registro"] == 1:
-                await register_flow.define_user_name(user, message, flow_status)
-                await send_message(
-                    "Digite seu melhor email\nEx:maria.fatima@gmail.com",
-                    number_formated,
-                )
-                return True
+            flows = {
+                1: register_flow.define_user_name,
+                2: register_flow.define_user_email,
+                3: register_flow.define_user_nascent_date,
+                4: register_flow.define_user_cep,
+                5: register_flow.define_user_cpf,
+                6: register_flow.define_user_rg,
+                7: register_flow.define_user_cns,
+                8: register_flow.define_user_district,
+            }
 
-            elif user_flow["etapa_registro"] == 2:
-                if await Input_validator.validate_email(message):
-                    await register_flow.define_user_email(user, message, flow_status)
-                    await send_message(
-                        "Digite sua data de nascimento\nEx:12/12/1997", number_formated
-                    )
-                    return True
+            validators = {
+                2: Input_validator.validate_email,
+                3: Input_validator.validate_nascent_date,
+                4: Document_validator.validate_cep,
+                5: Document_validator.validate_cpf,
+                7: Document_validator.validate_cns,
+            }
 
-                else:
-                    reply = "Por favor, digite um email válido"
+            function = flows.get(user_flow["etapa_registro"])
+            validator = validators.get(user_flow["etapa_registro"])
+
+            if validator:
+                validated_value = await validator(message)
+                if not validated_value:
+                    reply = "Por favor, digite um valor válido"
                     await send_message(reply, number_formated)
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST, detail=reply
                     )
-
-            elif user_flow["etapa_registro"] == 3:
-                nescient_date = await Input_validator.validate_nascent_date(message)
-
-                if nescient_date["value"]:
-                    await register_flow.define_user_nascent_date(
-                        user,
-                        nescient_date['date'],
-                        flow_status
-                    )
-                    await send_message("Digite seu CEP\nEx:56378-921", number_formated)
-                    return True
-
                 else:
-                    reply = "Por favor, digite uma data válida"
-                    await send_message(reply, number_formated)
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail=reply
-                    )
+                    # Update user data
+                    await function(user, validated_value, flow_status)
+                    prompt = self.get_prompt(user_flow["etapa_registro"], flow_status)
+                    await send_message(prompt, number_formated)
 
-            elif user_flow["etapa_registro"] == 4:
-                if await Document_validator.validate_cep(message):
-                    await register_flow.define_user_cep(user, message, flow_status)
-                    await send_message("Digite seu CPF\nEx:157.934.724-28", number_formated)
-                    return True
-
-                else:
-                    reply = "Por favor, digite uma CEP válido"
-                    await send_message(reply, number_formated)
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail=reply
-                    )
-
-            elif user_flow["etapa_registro"] == 5:
-                if await Document_validator.validate_cpf(message):
-                    await register_flow.define_user_cpf(user, message, flow_status)
-                    await send_message(
-                        "Digite o número do seu RG\nEx:4563912-9", number_formated
-                    )
-                    return True
-
-                else:
-                    reply = "Por favor, digite um cpf válido"
-                    await send_message(reply, number_formated)
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail=reply
-                    )
-
-            elif user_flow["etapa_registro"] == 6:
-                await register_flow.define_user_rg(user, message, flow_status)
-                await send_message(
-                    "Digite o número do seu cartão do SUS\nEx:157.872.171.284.436",
-                    number_formated,
-                )
-                return True
-
-            elif user_flow["etapa_registro"] == 7:
-                if await Document_validator.validate_cns(str(message).replace(".", "").replace("-", "")):
-                    await register_flow.define_user_cns(user, message, flow_status)
-                    await send_message(
-                        "Digite o nome do seu bairro\nEx: Benedito Bentes",
-                        number_formated,
-                    )
-                    return True
-
-                else:
-                    reply = "Por favor, digite um cartão nacional de saúde válido"
-                    await send_message(reply, number_formated)
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail=reply
-                    )
-
-            elif user_flow["etapa_registro"] == 8:
-                await register_flow.define_user_district(user, message, flow_status)
-                await send_message(
-                    "Parabéns, seu cadastro foi concluído, agora você pode agendar consultas ou exames pelo chat!\nDigite qualquer tecla para ver as opções",
-                    number_formated,
-                )
-                return True
+            elif function:
+                await function(user, message, flow_status)
+                prompt = self.get_prompt(user_flow["etapa_registro"], flow_status)
+                await send_message(prompt, number_formated)
 
         except Exception as error:
             message_log = "Erro ao atualizar os dados do usuário no banco de dados"
@@ -309,9 +280,6 @@ class BotDispatcher:
                 str(error),
                 500,
                 {"params": {"message": message, "user": user}},
-            )
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
     async def data_schedule_consult_update_flow(self, user: dict, message: str):

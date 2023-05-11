@@ -47,8 +47,7 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
-            finally:
-                await connection.close()
+
 
     async def select_data_schedule_from_user_id(self, user_id: int) -> Dict[str, Agendamentos]:
         """
@@ -91,8 +90,7 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
-            finally:
-                await connection.close()
+
 
     async def select_all_data_from_schedule_with_id(self, id: int) -> Dict[str, Union[Agendamentos, Unidade, Especialidade]]:
         """
@@ -141,8 +139,7 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
-            finally:
-                await connection.close()
+
 
     async def select_data_schedule_from_user_cellphone(self, cellphone: int) -> Dict[str, Agendamentos]:
         """
@@ -186,8 +183,7 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
-            finally:
-                await connection.close()
+
 
     async def insert_new_schedule_consult(self, user_id: int) -> Dict[str, Agendamentos]:
         """
@@ -223,8 +219,7 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
-            finally:
-                await connection.close()
+
 
     async def update_schedule_from_user_id(self, id_usuario: int, table: str, input_data: int) -> Dict[str, Agendamentos]:
         """
@@ -273,8 +268,7 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
-            finally:
-                await connection.close()
+
 
     async def update_schedule_from_id(self, id: int, table: str, input_data: int) -> Dict[str, Agendamentos]:
         """
@@ -324,8 +318,7 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
-            finally:
-                await connection.close()
+
 
     async def delete_schedule_from_user_id(self, user_id: int) -> bool:
         """
@@ -360,8 +353,7 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
-            finally:
-                await connection.close()
+
 
     async def get_last_time_scheduele_from_specialty_id(self, specialty_id: int, unity_id: int) -> Dict[str, Agendamentos]:
         """
@@ -418,8 +410,7 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
-            finally:
-                await connection.close()
+
 
     async def check_conflicting_schedule(
         self,
@@ -515,5 +506,4 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
-            finally:
-                await connection.close()
+

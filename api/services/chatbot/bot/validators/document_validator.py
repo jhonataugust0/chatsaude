@@ -18,7 +18,7 @@ class Document_validator():
             model = re.compile(r'^\d{5}-?\d{3}$')
 
             if model.match(str(cep)):
-                return True
+                return cep
             else:
                 return False
         except Exception as error:
@@ -40,16 +40,19 @@ class Document_validator():
         return -> boolean
         """
         try:
-            if numbers.isdigit():
-                if re.match(r"[1-2]\d{10}00[0-1]\d$", numbers) or re.match(
-                    r"[7-9]\d{14}$", numbers
-                ):
-                    i = 0
-                    soma = 0
-                    while i < len(numbers):
-                        soma = soma + int(numbers[i]) * (15 - i)
-                        i = i + 1
-                    return True if soma % 11 == 0 else False
+            number = str(numbers.replace(',', '').replace('-', '').replace('.', ''))
+            if re.match(r"[1-2]\d{10}00[0-1]\d$", number) or re.match(
+                r"[7-9]\d{14}$", number
+            ):
+                i = 0
+                soma = 0
+                while i < len(number):
+                    soma = soma + int(number[i]) * (15 - i)
+                    i = i + 1
+                if soma % 11 == 0:
+                    return number
+                else:
+                    return False
 
         except Exception as error:
             message_log = f"Erro ao validar o cartão do sus {numbers}"
@@ -91,7 +94,7 @@ class Document_validator():
                 digit = ((value * 10) % 11) % 10
                 if digit != cpf[i]:
                     return False
-            return True
+            return int(''.join(str(x) for x in cpf))
 
         except Exception as error:
             message_log = f"Erro ao validar o CPF {numbers}"
