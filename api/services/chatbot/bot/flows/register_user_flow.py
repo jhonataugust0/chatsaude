@@ -10,6 +10,14 @@ class Register_user_flow:
     def __init__(self, lang="br") -> None:
         self.lang = lang
 
+    async def insert_user_and_flow(self, number: int):
+        user_entity = UserRepository()
+        stage_entity = FluxoEtapaRepository()
+
+        new_user = await user_entity.insert_new_user(number)
+        await stage_entity.insert_new_user_flow(new_user["id"], 1, 1)
+        return True
+
     async def define_user_name(self, user: dict, message: str, flow_status: int) -> Response | HTTPException:
         """
             Método responsável por registrar o nome do usuário

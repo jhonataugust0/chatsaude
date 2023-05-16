@@ -1,4 +1,3 @@
-
 from ..bot.replies import Replies
 from time import sleep
 from fastapi import HTTPException, Response, status
@@ -8,29 +7,54 @@ from datetime import date as date_type
 from datetime import time as time_type
 
 from ..bot.flows.schedule_consult_flow import Schedule_consult_flow
-from api.services.schedules.models.repository.consulta_gendameno_repository import AgendamentosRepository
-from api.services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
-from api.services.health_unit.models.repository.unidade_repository import UnidadeRepository
+from ..bot.Bot_options import BotOptions
+
+from api.services.schedules.models.repository.consulta_gendameno_repository import (
+    AgendamentosRepository,
+)
+from api.services.user_flow.models.repository.fluxo_etapa_repository import (
+    FluxoEtapaRepository,
+)
+from api.services.health_unit.models.repository.unidade_repository import (
+    UnidadeRepository,
+)
 from api.services.user.models.repository.user_repository import UserRepository
 from ..utils.bot_utils import send_message
 
 from .validators.document_validator import Document_validator
 from .validators.input_validator import Input_validator
 
-from ..utils.date import (convert_to_datetime, format_date_for_user,
-                            format_time_for_user, get_more_forty_five)
-
-class BotOptions:
-    REGISTER_USER = "1"
-    SCHEDULE_CONSULT = "2"
-    SCHEDULE_EXAM = "3"
-    LIST_UNITIES = "4"
-    MAKE_REPORT = "5"
-
+from ..utils.date import (
+    convert_to_datetime,
+    format_date_for_user,
+    format_time_for_user,
+    get_more_forty_five,
+)
 
 class BotDispatcher:
     def __init__(self, lang="br") -> None:
         self.lang = lang
+
+    def get_prompt(self, current_step: int, next_step: int) -> str:
+        """
+        Retorna a mensagem para ser enviada ao usuário.
+        :param current_step: Etapa atual da conversa
+        :param next_step: Próxima etapa da conversa
+        :return: Mensagem a ser enviada ao usuário
+        """
+        if current_step == 1:
+            if next_step == 2:
+                return "Digite seu melhor email\nEx:maria.fatima@gmail.com"
+        elif current_step == 2:
+            if next_step == 3:
+                return "Digite sua data de nascimento\nEx:12/12/1997"
+        elif current_step == 3:
+            if next_step == 4:
+                return "Digite seu CEP\nEx:56378-921"
+        elif current_step == 4:
+            if next_step == 5:
+                return "Confirme as informações abaixo:\nNome: {nome}\nEmail: {email}\nData de nascimento: {data_nascimento}\nCEP: {cep}\nPara confirmar, digite 'sim'. Caso deseje corrigir alguma informação, digite 'nao' e siga as instruções."
+        return ""
 
     async def schedule_consult_trigger(self, verify_stage_user, cellphone):
         if "fluxo_agendamento_consulta" in verify_stage_user and (
@@ -137,47 +161,53 @@ class BotDispatcher:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def insert_user_and_flow(self, number: int):
-        user_entity = UserRepository()
-        stage_entity = FluxoEtapaRepository()
-
-        new_user = await user_entity.insert_new_user(number)
-        await stage_entity.insert_new_user_flow(new_user["id"], 1, 1)
-
-    async def trigger_processing(self, bot_response: dict, number: int, user: dict = None) -> Response:
+    async def trigger_processing(
+        self, bot_response: dict, number: int, user: dict = None
+    ) -> Response:
         try:
             stage_entity = FluxoEtapaRepository()
             user_entity = UserRepository()
             schedule_entity = AgendamentosRepository()
+            register_flow = Register_user_flow()
 
             trigger_actions = {
                 "register_user_trigger": {
-                        "action": [lambda: self.insert_user_and_flow(number)],
-                        "message": "Usuário inserido com sucesso",
-                    },
-                    "schedule_consult_trigger": {
-                        "action": [lambda: schedule_entity.insert_new_schedule_consult(user["id"])],
-                        "message": "Agendamento de consulta iniciado com sucesso",
-                    },
-                    # "schedule_exam_trigger": {
-                    #     "action": lambda: await schedule_entity.schedule_new_exam(user["id"], stage_entity, exam_entity),
-                    #     "message": "Agendamento de exame iniciado com sucesso",
-                    # },
-                    # "make_report_trigger": {
-                    #     "action": lambda: await schedule_entity.make_report(user, report_entity),
-                    #     "message": "Relatório gerado com sucesso",
-                    # },
+                    "action": [
+                        lambda: register_flow.insert_user_and_flow(number)
+                        ],
+                    "message": "Usuário inserido com sucesso",
+                },
+                "schedule_consult_trigger": {
+                    "action": [
+                        lambda: stage_entity.update_flow_from_user_id(user["id"], "fluxo_agendamento_consulta", 1),
+                        lambda: stage_entity.update_flow_from_user_id(user["id"], "etapa_agendamento_consulta", 0),
+                        lambda: schedule_entity.insert_new_schedule_consult(user["id"])
+                    ],
+                    "message": "Agendamento de consulta iniciado com sucesso",
+                },
+                "schedule_exam_trigger": {
+                    "action": [
+                        lambda: schedule_entity.insert_new_schedule_exam(user["id"])
+                    ],
+                    "message": "Agendamento de exame iniciado com sucesso",
+                },
+                # "make_report_trigger": {
+                #     "action": lambda: await schedule_entity.make_report(user, report_entity),
+                #     "message": "Relatório gerado com sucesso",
+                # },
             }
 
-            for trigger in bot_response:
-                if trigger in trigger_actions and bot_response[trigger] == 1:
-                    for func in trigger_actions[trigger]["action"]:
-                        await func()
+            if bot_response is not None:
+                for trigger in bot_response:
+                    if trigger in trigger_actions and bot_response[trigger] == 1:
+                        for func in trigger_actions[trigger]["action"]:
+                            await func()
 
-                    return Response(
-                        status_code=status.HTTP_200_OK,
-                        content=trigger_actions[trigger]["message"],
-                    )
+                        return Response(
+                            status_code=status.HTTP_200_OK,
+                            content=trigger_actions[trigger]["message"],
+                        )
+
         except Exception as error:
             message_log = f"Erro ao processar os gatilhos {bot_response}"
             log = Logging(message_log)
@@ -191,27 +221,6 @@ class BotDispatcher:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
-
-    def get_prompt(self, current_step: int, next_step: int) -> str:
-        """
-        Retorna a mensagem para ser enviada ao usuário.
-        :param current_step: Etapa atual da conversa
-        :param next_step: Próxima etapa da conversa
-        :return: Mensagem a ser enviada ao usuário
-        """
-        if current_step == 1:
-            if next_step == 2:
-                return "Digite seu melhor email\nEx:maria.fatima@gmail.com"
-        elif current_step == 2:
-            if next_step == 3:
-                return "Digite sua data de nascimento\nEx:12/12/1997"
-        elif current_step == 3:
-            if next_step == 4:
-                return "Digite seu CEP\nEx:56378-921"
-        elif current_step == 4:
-            if next_step == 5:
-                return "Confirme as informações abaixo:\nNome: {nome}\nEmail: {email}\nData de nascimento: {data_nascimento}\nCEP: {cep}\nPara confirmar, digite 'sim'. Caso deseje corrigir alguma informação, digite 'nao' e siga as instruções."
-        return ""
 
     async def data_users_update_flow(self, user: dict, message: str):
         """
@@ -299,10 +308,14 @@ class BotDispatcher:
             user_flow = await flow_entity.select_stage_from_user_id(int(user["id"]))
             flow_status = user_flow["etapa_agendamento_consulta"] + 1
             number_formated = f"whatsapp:+" + str(user["telefone"])
-            schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
+            schedule_data = await consult_entity.select_data_schedule_from_user_id(
+                user["id"]
+            )
 
             if user_flow["etapa_agendamento_consulta"] == 1:
-                await  register_consult_flow.define_specialty_consult(user, message, flow_status)
+                await register_consult_flow.define_specialty_consult(
+                    user, message, flow_status
+                )
 
                 await send_message(
                     "Escolha a unidade suportada mais próxima de você\nDigite o número correspondente ao da unidade desejada\nEx: 1",
@@ -323,7 +336,9 @@ class BotDispatcher:
                 )
 
             elif user_flow["etapa_agendamento_consulta"] == 2:
-                consult_data = await register_consult_flow.define_unity_consult(user, int(message), flow_status)
+                consult_data = await register_consult_flow.define_unity_consult(
+                    user, int(message), flow_status
+                )
 
                 last_time = (
                     await consult_entity.get_last_time_scheduele_from_specialty_id(
@@ -332,9 +347,7 @@ class BotDispatcher:
                     )
                 )
                 if consult_data["id_unidade"] != None and last_time != None:
-                    data = await format_date_for_user(
-                        last_time[-1]["data_agendamento"]
-                    )
+                    data = await format_date_for_user(last_time[-1]["data_agendamento"])
                     hora = await format_time_for_user(
                         last_time[-1]["horario_termino_agendamento"]
                     )
@@ -361,7 +374,9 @@ class BotDispatcher:
             elif user_flow["etapa_agendamento_consulta"] == 3:
                 date = await Input_validator.validate_date_schedule(message)
                 if date["value"]:
-                    await register_consult_flow.define_date_consult(user, date['date'], flow_status)
+                    await register_consult_flow.define_date_consult(
+                        user, date["date"], flow_status
+                    )
                     await send_message(
                         "Digite o horário que deseja realizar a consulta (atente-se para o horário estar dentro do período de funcionamento da unidade escolhida)\nEx: 08:00",
                         number_formated,
@@ -402,7 +417,9 @@ class BotDispatcher:
                         content="Mensagem enviada com sucesso",
                     )
                 else:
-                    await register_consult_flow.define_time_consult(user, message, flow_status)
+                    await register_consult_flow.define_time_consult(
+                        user, message, flow_status
+                    )
                     await send_message(
                         "(Opcional) Digite uma mensagem descrevendo qual a sua necessidade para a especialidade escolhida.\nEx: Exame de rotina\nVocê pode digitar qualquer coisa para ignorar essa etapa)",
                         number_formated,
@@ -413,8 +430,12 @@ class BotDispatcher:
                     )
 
             elif user_flow["etapa_agendamento_consulta"] == 5:
-                await register_consult_flow.define_necessity_consult(user, message, flow_status)
-                all_data = await register_consult_flow.finalize_schedule_flow(user, message, flow_status)
+                await register_consult_flow.define_necessity_consult(
+                    user, message, flow_status
+                )
+                all_data = await register_consult_flow.finalize_schedule_flow(
+                    user, message, flow_status
+                )
 
                 await send_message(
                     f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {await format_date_for_user(all_data['data_agendamento'])} as {await format_time_for_user(all_data['horario_inicio_agendamento'])} horas para a sua consulta com o {all_data['specialty_info']['nome']}",
@@ -450,3 +471,32 @@ class BotDispatcher:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
+
+    # async def data_schedule_exam_update_flow(self, user: dict, message: str):
+    #     """
+    #     Método responsável por realizar a atualização de dados
+    #     de agendamento de consulta durante o processo de cadas-
+    #     tro da mesma.
+    #       :params user: dict
+    #       :params message: string
+    #     """
+    #     unities_entity = UnidadeRepository()
+    #     consult_entity = AgendamentosRepository()
+    #     flow_entity = FluxoEtapaRepository()
+    #     number_formated = f"whatsapp:+" + str(user["telefone"])
+    #     register_consult_flow = Schedule_consult_flow()
+    #     try:
+
+    #     except Exception as error:
+    #         message_log = "Erro ao atualizar os dados do agendamento no banco de dados"
+    #         log = Logging(message_log)
+    #         await log.warning(
+    #             "data_schedule_consult_update_flow",
+    #             None,
+    #             str(error),
+    #             500,
+    #             {"params": {"message": message, "user": user}},
+    #         )
+    #         raise HTTPException(
+    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
+    #         )

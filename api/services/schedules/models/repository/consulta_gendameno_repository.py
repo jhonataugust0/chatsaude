@@ -184,7 +184,6 @@ class AgendamentosRepository:
                 )
 
 
-
     async def insert_new_schedule_consult(self, user_id: int) -> Dict[str, Agendamentos]:
         """
         Inserta uma nova linha na tabela de agendamento
@@ -219,6 +218,40 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
+    async def insert_new_schedule_exam(self, user_id: int) -> Dict[str, Agendamentos]:
+        """
+        Inserta uma nova linha do tipo consulta na tabela de 
+        agendamentos
+          :params user_id: int - id do usuário
+          :params specialty: str - especialidade do agendamento
+        """
+        async with Connection(connection_url=self.connection_url) as connection:
+            try:
+                query = Agendamentos(
+                    id_usuario=user_id, tipo_agendamento="Exame", ativo=1
+                )
+                connection.add(query)
+                await connection.commit()
+                result_proxy = await connection.execute(
+                    select(Agendamentos).where(Agendamentos.id == query.id)
+                )
+                schedule_dict = Agendamentos.as_dict(result_proxy.scalar_one())
+
+                return schedule_dict
+
+            except Exception as error:
+                message = "Erro ao inserir um novo agendamento no banco de dados"
+                log = Logging(message)
+                await log.warning(
+                    "insert_new_schedule_exam",
+                    None,
+                    error,
+                    500,
+                    {"params": {"user_id": user_id}},
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
+                )
 
 
     async def update_schedule_from_user_id(self, id_usuario: int, table: str, input_data: int) -> Dict[str, Agendamentos]:

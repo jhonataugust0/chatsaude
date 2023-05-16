@@ -72,12 +72,12 @@ class Bot:
 
                 elif user_stage and "fluxo_agendamento_consulta" in user_stage:
                     if user_stage["fluxo_agendamento_consulta"] != "None":
-                        if int(user_stage["fluxo_agendamento_consulta"]) == 1:
+                        if user_stage["fluxo_agendamento_consulta"] == 1:
                             await dispatcher.data_schedule_consult_update_flow(
                                 user, message
                             )
 
-            if "message" in bot_response:
+            if bot_response is not None and "message" in bot_response:
                 if "telefone" in user and user["telefone"] != "None":
                     if (
                         user_stage["fluxo_agendamento_consulta"] != "None"
