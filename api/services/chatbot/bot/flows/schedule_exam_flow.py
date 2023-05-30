@@ -2,7 +2,7 @@ from fastapi import HTTPException, Response, status
 from api.services.chatbot.utils.date import convert_to_datetime, get_more_forty_five
 
 from api.services.health_unit.models.repository.unidade_repository import UnidadeRepository
-from api.services.schedules.consult.models.repository.consulta_agendameno_repository import AgendamentoConsultaRepository
+from api.services.schedules.exam.models.repository.exame_gendameno_repository import AgendamentoExameRepository
 
 from .....log.logging import Logging
 from ...utils.bot_utils import send_message
@@ -12,7 +12,7 @@ from api.services.health_agents.models.repository.especialidade_repository impor
 
 
 
-class ScheduleConsultFlow:
+class ScheduleExamFlow:
     def __init__(self, lang="br") -> None:
         self.lang = lang
 
@@ -24,7 +24,7 @@ class ScheduleConsultFlow:
           :params message: string
           :params flow_status: int
         """
-        consult_entity = AgendamentoConsultaRepository()
+        consult_entity = AgendamentoExameRepository()
         flow_entity = FluxoEtapaRepository()
         specialty_entity = EspecialidadeRepository()
 
@@ -34,7 +34,7 @@ class ScheduleConsultFlow:
                 await specialty_entity.select_specialty_from_name(message)
             )
             await flow_entity.update_flow_from_user_id(
-                user["id"], "etapa_agendamento_consulta", flow_status
+                user["id"], "etapa_agendamento_exame", flow_status
             )
             consult_data = await consult_entity.update_schedule_from_id(
                 schedule_data["id"],
@@ -44,7 +44,7 @@ class ScheduleConsultFlow:
             return consult_data
 
         except Exception as error:
-            message_log = "Erro ao registrar a especialidade da consulta no banco de dados"
+            message_log = "Erro ao definir a especialidade da consulta no banco de dados"
             log = Logging(message_log)
             await log.warning(
                 "define_specialty_consult",
@@ -65,14 +65,14 @@ class ScheduleConsultFlow:
           :params message: string
           :params flow_status: int
         """
-        consult_entity = AgendamentoConsultaRepository()
+        consult_entity = AgendamentoExameRepository()
         flow_entity = FluxoEtapaRepository()
         specialty_entity = EspecialidadeRepository()
 
         try:
             schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
             user_flow = await flow_entity.update_flow_from_user_id(
-                user["id"], "etapa_agendamento_consulta", flow_status
+                user["id"], "etapa_agendamento_exame", flow_status
             )
             consult_data = await consult_entity.update_schedule_from_id(
                 schedule_data["id"], "id_unidade", message
@@ -101,14 +101,14 @@ class ScheduleConsultFlow:
           :params message: string
           :params flow_status: int
         """
-        consult_entity = AgendamentoConsultaRepository()
+        consult_entity = AgendamentoExameRepository()
         flow_entity = FluxoEtapaRepository()
         specialty_entity = EspecialidadeRepository()
 
         try:
             schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
             user_flow = await flow_entity.update_flow_from_user_id(
-                user["id"], "etapa_agendamento_consulta", flow_status
+                user["id"], "etapa_agendamento_exame", flow_status
             )
             await consult_entity.update_schedule_from_id(
                 schedule_data["id"], "data_agendamento", date
@@ -140,13 +140,13 @@ class ScheduleConsultFlow:
             :params message: string
             :params flow_status: int
         """
-        consult_entity = AgendamentoConsultaRepository()
+        consult_entity = AgendamentoExameRepository()
         flow_entity = FluxoEtapaRepository()
         specialty_entity = EspecialidadeRepository()
         try:
             schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
             user_flow = await flow_entity.update_flow_from_user_id(
-                user["id"], "etapa_agendamento_consulta", flow_status
+                user["id"], "etapa_agendamento_exame", flow_status
             )
             final_schedule = await get_more_forty_five(str(message))
             consult_data = await consult_entity.update_schedule_from_id(
@@ -183,7 +183,7 @@ class ScheduleConsultFlow:
             :params message: string
             :params flow_status: int
         """
-        consult_entity = AgendamentoConsultaRepository()
+        consult_entity = AgendamentoExameRepository()
         flow_entity = FluxoEtapaRepository()
         try:
             schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
@@ -213,12 +213,12 @@ class ScheduleConsultFlow:
             :params message: string
             :params flow_status: int
         """
-        consult_entity = AgendamentoConsultaRepository()
+        consult_entity = AgendamentoExameRepository()
         flow_entity = FluxoEtapaRepository()
         try:
             schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
             await flow_entity.update_flow_from_user_id(
-                user["id"], "etapa_agendamento_consulta", 0
+                user["id"], "etapa_agendamento_exame", 0
             )
             await flow_entity.update_flow_from_user_id(
                 user["id"], "fluxo_agendamento_consulta", 0

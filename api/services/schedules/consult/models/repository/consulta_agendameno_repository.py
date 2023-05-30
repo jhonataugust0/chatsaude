@@ -7,16 +7,16 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from api.log.logging import Logging
 
-from .....models.configs.connection import Connection
+from api.models.configs.connection import Connection
 from ..entity.agendamentos_model import Agendamentos
-from ....health_unit.models.entity.unidade_model import Unidade
-from ....user.models.entity.user_model import Usuario
-from ....health_agents.models.entity.especialidade_model import Especialidade
-from ....health_agents.models.repository.especialidade_repository import EspecialidadeRepository
-from ....health_unit.models.repository.unidade_repository import UnidadeRepository
+from api.services.health_unit.models.entity.unidade_model import Unidade
+from api.services.user.models.entity.user_model import Usuario
+from api.services.health_agents.models.entity.especialidade_model import Especialidade
+from api.services.health_agents.models.repository.especialidade_repository import EspecialidadeRepository
+from api.services.health_unit.models.repository.unidade_repository import UnidadeRepository
 
 
-class AgendamentosRepository:
+class AgendamentoConsultaRepository:
     def __init__(self):
         self.connection_url = os.environ.get('CONNECTION_URL')
 
@@ -220,7 +220,7 @@ class AgendamentosRepository:
 
     async def insert_new_schedule_exam(self, user_id: int) -> Dict[str, Agendamentos]:
         """
-        Inserta uma nova linha do tipo consulta na tabela de 
+        Inserta uma nova linha do tipo consulta na tabela de
         agendamentos
           :params user_id: int - id do usuário
           :params specialty: str - especialidade do agendamento
@@ -351,8 +351,6 @@ class AgendamentosRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
-
-
     async def delete_schedule_from_user_id(self, user_id: int) -> bool:
         """
             Delete uma linha da tabela agendamentos baseado no id
@@ -385,8 +383,6 @@ class AgendamentosRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
-
 
     async def get_last_time_scheduele_from_specialty_id(self, specialty_id: int, unity_id: int) -> Dict[str, Agendamentos]:
         """

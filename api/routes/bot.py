@@ -66,26 +66,24 @@ class Bot:
                 stage_entity = FluxoEtapaRepository()
                 user_stage = await stage_entity.select_stage_from_user_id(int(user["id"]))
 
-                if user_stage and int(user_stage["fluxo_registro"]) == 1:
+                if user_stage and user_stage["fluxo_registro"] == 1:
                     await dispatcher.data_users_update_flow(user, message)
                     return {}
 
-                elif user_stage and "fluxo_agendamento_consulta" in user_stage:
-                    if user_stage["fluxo_agendamento_consulta"] != "None":
-                        if user_stage["fluxo_agendamento_consulta"] == 1:
-                            await dispatcher.data_schedule_consult_update_flow(
-                                user, message
-                            )
+                elif user_stage and user_stage["fluxo_agendamento_consulta"] == 1:
+                    await dispatcher.data_schedule_consult_update_flow(
+                        user, message
+                    )
 
             if bot_response is not None and "message" in bot_response:
-                if "telefone" in user and user["telefone"] != "None":
+                if "telefone" in user and user["telefone"] != None:
                     if (
-                        user_stage["fluxo_agendamento_consulta"] != "None"
-                        or user_stage["etapa_agendamento_consulta"] != "None"
+                        user_stage["fluxo_agendamento_consulta"] != None
+                        or user_stage["etapa_agendamento_consulta"] != None
                     ):
                         if (
-                            int(user_stage["fluxo_agendamento_consulta"]) == 1
-                            or int(user_stage["etapa_agendamento_consulta"]) == 1
+                            user_stage["fluxo_agendamento_consulta"] == 1
+                            or user_stage["etapa_agendamento_consulta"] == 1
                         ):
                             if (
                                 bot_response["message"] != BotOptions.LIST_UNITIES

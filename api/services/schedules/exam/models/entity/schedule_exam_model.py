@@ -2,18 +2,17 @@ from typing import Any, Dict
 
 from sqlalchemy import (VARCHAR, BigInteger, Column, Date, ForeignKey, Integer,
                         Text, Time)
-from .....models.configs.base import Base
-from ....health_unit.models.entity.unidade_model import Unidade
+from api.models.configs.base import Base
+from api.services.health_unit.models.entity.unidade_model import Unidade
 
 
-class Agendamentos(Base):
-    __tablename__ = "agendamentos"
+class AgendamentoExame(Base):
+    __tablename__ = "agendamento_exame"
 
     id = Column(Integer, primary_key=True)
     id_usuario = Column(ForeignKey("usuario.id"))
     id_unidade = Column(ForeignKey("unidade.id"))
     id_especialidade = Column(ForeignKey("especialidade.id"))
-    tipo_agendamento = Column(VARCHAR(150))
     data_agendamento = Column(Date)
     horario_inicio_agendamento = Column(Time)
     horario_termino_agendamento = Column(Time)
