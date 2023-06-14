@@ -41,7 +41,8 @@ class FluxoEtapaRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def select_stage_from_user_id(self, user_id: int) -> Dict[str, FluxoEtapa]:
@@ -77,7 +78,8 @@ class FluxoEtapaRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def insert_new_user_flow(self, user_id: int, flow: int, status: int) -> Dict[str, FluxoEtapa]:
@@ -121,7 +123,8 @@ class FluxoEtapaRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def update_flow_from_user_id(self, id_usuario: int, table: str, input_data: int) -> Dict[str, FluxoEtapa]:
@@ -164,7 +167,8 @@ class FluxoEtapaRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def delete_flow_from_user_id(self, user_id: int) -> Union[bool, None]:
@@ -200,5 +204,6 @@ class FluxoEtapaRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 

@@ -3,13 +3,15 @@ from urllib.parse import parse_qs
 from fastapi import (APIRouter, Body, Depends, HTTPException, Request,
                      Response, status)
 
+from api.services.chatbot.bot.flows.schedule_consult_flow import ScheduleConsultFlow
+
 from ..services.chatbot.bot.dispatcher import BotDispatcher, BotOptions
 from ..services.chatbot.bot.replies import Replies
 from api.log.logging import Logging
 from api.services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
 from api.services.user.models.repository.user_repository import UserRepository
 from ..services.chatbot.utils.bot_utils import send_message
-
+from ..services.chatbot.bot.flows.register_user_flow import RegisterUserFlow
 
 class Bot:
     def __init__(self, tags: str = ["Bot"]):
@@ -46,8 +48,6 @@ class Bot:
         try:
             user_entity = UserRepository()
             dispatcher = BotDispatcher()
-            user = ""
-            bot_response = ""
 
             user = await user_entity.select_user_from_cellphone(int(number))
             bot_response = await dispatcher.message_processor(message, int(number), user)
@@ -67,12 +67,12 @@ class Bot:
                 user_stage = await stage_entity.select_stage_from_user_id(int(user["id"]))
 
                 if user_stage and user_stage["fluxo_registro"] == 1:
-                    await dispatcher.data_users_update_flow(user, message)
+                    await RegisterUserFlow.data_users_update_flow(self, user, message)
                     return {}
 
                 elif user_stage and user_stage["fluxo_agendamento_consulta"] == 1:
-                    await dispatcher.data_schedule_consult_update_flow(
-                        user, message
+                    await ScheduleConsultFlow.data_schedule_consult_update_flow(
+                        self, user, message
                     )
 
                 elif user_stage and user_stage["fluxo_agendamento_exame"] == 1:

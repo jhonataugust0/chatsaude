@@ -41,7 +41,8 @@ class UnidadeRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def select_unity_from_id(self, unity_id) -> Dict[str, Unidade]:
@@ -76,7 +77,8 @@ class UnidadeRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def select_unity_from_district(self, district) -> Dict[str, Unidade]:
@@ -112,7 +114,8 @@ class UnidadeRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def insert_new_unity(self, name: str) -> Dict[str, Unidade]:
@@ -142,7 +145,8 @@ class UnidadeRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def update_unity_from_id(self, unity_id: int, table: str, input_data: int) -> Dict[str, Unidade]:
@@ -190,7 +194,8 @@ class UnidadeRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def delete_unity_from_id(self, unity_id: int) -> bool:
@@ -224,5 +229,6 @@ class UnidadeRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 

@@ -40,6 +40,8 @@ class EspecialidadeRepository:
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
 
+            finally:
+                await connection.close()
 
 
     async def select_specialty_from_name(self, name: str) -> Dict[str, Especialidade]:
@@ -81,7 +83,8 @@ class EspecialidadeRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def select_specialty_from_id(self, id: int) -> Dict[str, Especialidade]:
@@ -113,7 +116,8 @@ class EspecialidadeRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def insert_new_specialty(self, name) -> Dict[str, Especialidade]:
@@ -145,7 +149,8 @@ class EspecialidadeRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def update_specialty_data(self, name, table, input_data) -> Dict[str, Especialidade]:
@@ -194,7 +199,8 @@ class EspecialidadeRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def delete_specialty(self, name) -> bool:
@@ -226,5 +232,6 @@ class EspecialidadeRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 

@@ -81,8 +81,7 @@ class Input_validator():
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    @classmethod
-    async def validate_date_schedule(cls, date_schedule):
+    async def validate_date_schedule(self, date_schedule, user=None, number_formated=None, message=None, flow_status=None):
         try:
             current_date = datetime.now(pytz.timezone("America/Sao_Paulo"))
             current_date = datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
@@ -95,10 +94,10 @@ class Input_validator():
             # date_informed = datetime.datetime.strftime(date_informed,"%Y-%m-%d")
 
             if date_informed >= current_date:
-                return {"date": date_informed, "value": True}
+                return date_informed
 
             else:
-                return {"date": date_informed, "value": False}
+                return False
 
         except Exception as error:
             message_log = f"Erro ao validar a data {date_schedule}"

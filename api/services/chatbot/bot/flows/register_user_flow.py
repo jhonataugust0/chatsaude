@@ -1,4 +1,8 @@
 from fastapi import HTTPException, Response, status
+from api.services.chatbot.bot.replies import Replies
+from api.services.chatbot.bot.validators.document_validator import Document_validator
+
+from api.services.chatbot.bot.validators.input_validator import Input_validator
 
 from .....log.logging import Logging
 from ...utils.bot_utils import send_message
@@ -6,9 +10,78 @@ from api.services.user.models.repository.user_repository import UserRepository
 from api.services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
 
 
-class Register_user_flow:
+class RegisterUserFlow:
     def __init__(self, lang="br") -> None:
         self.lang = lang
+
+    async def data_users_update_flow(self, user: dict, message: str):
+        """
+        Método responsável por orquestar os inputs do usuário
+        para os métodos corretos das classes de fluxo para a
+        execução de uma conversa com o chatbot.
+        :params user: dict
+        :params message: string
+        """
+        flow_entity = FluxoEtapaRepository()
+        number_formated = f"whatsapp:+" + str(user["telefone"])
+        flow_status = None
+
+        try:
+            user_flow = await flow_entity.select_stage_from_user_id(int(user["id"]))
+            flow_status = user_flow["etapa_registro"] + 1
+
+            flows = {
+                1: RegisterUserFlow.define_user_name,
+                2: RegisterUserFlow.define_user_email,
+                3: RegisterUserFlow.define_user_nascent_date,
+                4: RegisterUserFlow.define_user_cep,
+                5: RegisterUserFlow.define_user_cpf,
+                6: RegisterUserFlow.define_user_rg,
+                7: RegisterUserFlow.define_user_cns,
+                8: RegisterUserFlow.define_user_district,
+            }
+
+            validators = {
+                2: Input_validator.validate_email,
+                3: Input_validator.validate_nascent_date,
+                4: Document_validator.validate_cep,
+                5: Document_validator.validate_cpf,
+                7: Document_validator.validate_cns,
+            }
+
+            function = flows.get(user_flow["etapa_registro"])
+            validator = validators.get(user_flow["etapa_registro"])
+
+            if validator:
+                validated_value = await validator(message)
+                if not validated_value:
+                    reply = "Por favor, digite um valor válido"
+                    await send_message(reply, number_formated)
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST, detail=reply
+                    )
+                else:
+                    # Update user data
+                    await function(self, user, validated_value, flow_status)
+                    prompt = await Replies.get_prompt(user_flow["etapa_registro"], flow_status)
+                    await send_message(prompt, number_formated)
+
+            elif function:
+                await function(self, user, message, flow_status)
+                prompt = str(Replies.REGISTER_FULL)
+                await send_message(prompt, number_formated)
+
+        except Exception as error:
+            message_log = "Erro ao atualizar os dados do usuário no banco de dados"
+            log = Logging(message_log)
+            await log.warning(
+                "flow_registration",
+                None,
+                str(error),
+                500,
+                {"params": {"message": message, "user": user}},
+            )
+
 
     async def insert_user_and_flow(self, number: int):
         user_entity = UserRepository()

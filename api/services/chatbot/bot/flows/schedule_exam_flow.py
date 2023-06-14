@@ -187,6 +187,12 @@ class ScheduleExamFlow:
         flow_entity = FluxoEtapaRepository()
         try:
             schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
+            await flow_entity.update_flow_from_user_id(
+                user["id"], "etapa_agendamento_exame", 0
+            )
+            await flow_entity.update_flow_from_user_id(
+                user["id"], "fluxo_agendamento_exame", 0
+            )
             consult_data = await consult_entity.update_schedule_from_id(
                 schedule_data["id"], "descricao_necessidade", str(message)
             )

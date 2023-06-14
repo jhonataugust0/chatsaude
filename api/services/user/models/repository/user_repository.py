@@ -45,7 +45,8 @@ class UserRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def select_user_from_cellphone(self, cellphone) -> Dict[str, Usuario]:
@@ -78,7 +79,8 @@ class UserRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def insert_new_user(self, telefone: int) -> Dict[str, Usuario]:
@@ -112,7 +114,8 @@ class UserRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def update_user_data(self, telefone, table, input_data) -> Dict[str, Usuario]:
@@ -160,7 +163,8 @@ class UserRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 
 
     async def delete(self, cellphone) -> bool:
@@ -186,5 +190,6 @@ class UserRepository:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message
                 )
-
+            finally:
+                await connection.close()
 

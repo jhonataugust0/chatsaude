@@ -1,3 +1,4 @@
+import asyncio
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -11,6 +12,7 @@ class Connection:
         self.async_session = None
         self.sql_meta = MetaData()
         self.pool = Queue(maxsize=pool_size)
+        self.lock = asyncio.Lock()
 
     async def create_new_connection(self):
         self.engine = create_async_engine(f"{self.url_connection}")
@@ -32,10 +34,12 @@ class Connection:
         await self.engine.dispose()
 
     async def __aenter__(self):
-        if self.pool.empty():
-            await self.connect()
-        return await self.pool.get()
+        async with self.lock:
+            if self.pool.empty():
+                await self.connect()
+            return await self.pool.get()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        session = self.async_session
-        await self.pool.put(session)
+        async with self.lock:
+            await self.async_session.close()
+            await self.pool.put(self.async_session)
