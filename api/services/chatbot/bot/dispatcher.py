@@ -7,6 +7,7 @@ from ..bot.Bot_options import BotOptions
 from fastapi import HTTPException, Response, status
 from ..bot.flows.register_user_flow import Register_user_flow
 from ..bot.flows.schedule_consult_flow import ScheduleConsultFlow
+from ..bot.flows.schedule_exam_flow import ScheduleExamFlow
 
 from ...schedules.consult.models.repository.consulta_agendameno_repository import (
     AgendamentoConsultaRepository,
@@ -487,7 +488,7 @@ class BotDispatcher:
         exam_entity = AgendamentoExameRepository()
         flow_entity = FluxoEtapaRepository()
         number_formated = f"whatsapp:+" + str(user["telefone"])
-        register_consult_flow = ScheduleConsultFlow()
+        register_consult_flow = ScheduleExamFlow()
 
         try:
             user_flow = await flow_entity.select_stage_from_user_id(int(user["id"]))

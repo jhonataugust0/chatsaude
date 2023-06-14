@@ -75,6 +75,11 @@ class Bot:
                         user, message
                     )
 
+                elif user_stage and user_stage["fluxo_agendamento_exame"] == 1:
+                    await dispatcher.data_schedule_exam_update_flow(
+                        user, message
+                    )
+
             if bot_response is not None and "message" in bot_response:
                 if "telefone" in user and user["telefone"] != None:
                     if (

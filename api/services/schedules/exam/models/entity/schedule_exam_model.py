@@ -27,7 +27,6 @@ class AgendamentoExame(Base):
             "id_usuario": int(self.id_usuario),
             "id_unidade": int(self.id_unidade),
             "id_especialidade": int(self.id_especialidade),
-            "tipo_agendamento": str(self.tipo_agendamento),
             "data_agendamento": str(self.data_agendamento),
             "horario_inicio_agendamento": str(self.horario_inicio_agendamento),
             "horario_termino_agendamento": str(self.horario_termino_agendamento),
