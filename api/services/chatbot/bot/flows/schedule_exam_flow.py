@@ -1,5 +1,6 @@
 from fastapi import HTTPException, Response, status
-from api.services.chatbot.utils.date import convert_to_datetime, get_more_forty_five
+from api.services.chatbot.bot.validators.input_validator import Input_validator
+from api.services.chatbot.utils.date import convert_to_datetime, format_date_for_user, format_time_for_user, get_more_forty_five
 
 from api.services.health_unit.models.repository.unidade_repository import UnidadeRepository
 from api.services.schedules.exam.models.repository.exame_gendameno_repository import AgendamentoExameRepository
@@ -15,6 +16,170 @@ from api.services.health_agents.models.repository.especialidade_repository impor
 class ScheduleExamFlow:
     def __init__(self, lang="br") -> None:
         self.lang = lang
+
+    async def init_schedule_flow(self, user, message, flow_status):
+        flow_entity = FluxoEtapaRepository()
+        consult_flow_stage = await flow_entity.update_flow_from_user_id(
+            user["id"], "etapa_agendamento_exame", 1
+        )
+        return Response(
+            status_code=status.HTTP_200_OK,
+            content="Fluxo atualizado com sucesso",
+        )
+
+    async def load_unities(self, user, number_formated, message, flow_status):
+        send_message("Escolha a unidade suportada mais próxima de você\nDigite o número correspondente ao da unidade desejada\nEx: 1", number_formated)
+        unities_entity = UnidadeRepository()
+        unities = await unities_entity.select_all()
+        for i in unities:
+            unities_text = f"""Unidade {i['id']}: {i['nome'].split('(')[0]}\nEndereço: {i['endereco'].replace(',','').split('s/n')[0]}\nBairro: {i['bairro']}\nHorario de funcionamento: {i['horario_funcionamento']}"""
+            await send_message(unities_text, number_formated)
+
+        return Response(
+            status_code=status.HTTP_200_OK,
+            content="Mensagem enviada com sucesso",
+        )
+
+    async def get_last_time_schedule(self, user, number_formated, message, flow_status):
+        consult_entity = AgendamentoExameRepository()
+        data_schedule = (
+            await consult_entity.select_data_schedule_from_user_cellphone(
+                int(user["telefone"])
+            )
+        )
+        last_time = (
+            await consult_entity.get_last_time_scheduele_from_specialty_id(
+                int(data_schedule["id_especialidade"]),
+                int(data_schedule["id_unidade"]),
+            )
+        )
+        if data_schedule["id_unidade"] and last_time:
+            data = await format_date_for_user(last_time[-1]["data_agendamento"])
+            hora = await format_time_for_user(
+                last_time[-1]["horario_termino_agendamento"]
+            )
+            await send_message(
+                f"""Digite o dia que você deseja realizar o exane\nEx: 24/12/2023\nAtenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}""",
+                number_formated,
+            )
+        else:
+            await send_message(
+                f"""Digite o dia que você deseja realizar o exane\nEx: 24/12/2023""",
+                number_formated,
+            )
+
+        return Response(
+            status_code=status.HTTP_200_OK,
+            content="Mensagem enviada com sucesso",
+        )
+
+    async def send_request_time_schedule(self, user, number_formated, message, flow_status):
+        await send_message(
+            "Digite o horário que deseja realizar o exame (atente-se para o horário estar dentro do período de funcionamento da unidade escolhida)\nEx: 08:00",
+            number_formated,
+        )
+
+    async def send_request_necessity(self, user, number_formated, message, flow_status):
+        await send_message(
+            "Opcional: Digite o que está sentindo ou a necessidade do exame.\nDigite qualquer coisa para ignorar e concluir o agendamento",
+            number_formated,
+        )
+
+    async def check_conflict(self, message, user, number_formated, flow_status):
+        consult_entity = AgendamentoExameRepository()
+        data_schedule = (
+            await consult_entity.select_data_schedule_from_user_cellphone(
+                int(user["telefone"])
+            )
+        )
+        if data_schedule['horario_inicio_agendamento'] != None:
+            conflict = await consult_entity.check_conflicting_schedule(
+                data_schedule["id_unidade"],
+                data_schedule["id_especialidade"],
+                data_schedule["data_agendamento"],
+                str(message) + ":00",
+                await get_more_forty_five(message),
+                data_schedule["id"],
+            )
+            if conflict == False:
+                return {'value': True, 'content': message}
+            else:
+                await send_message(
+                    "Desculpe, esse horário está indisponível, por favor, informe um horário no mínimo superior ao informado anteriormente",
+                    number_formated,
+                )
+                return {'value': False, 'content': None}
+        return {'value': True, 'content': message}
+
+    async def data_schedule_exam_update_flow(self, user: dict, message: str):
+        """
+        Método responsável por orquestrar os inputs do usuário
+        para os métodos corretos das classes de fluxo para a
+        execução de uma conversa com o chatbot.
+        :params user: dict
+        :params message: string
+        """
+        flow_entity = FluxoEtapaRepository()
+        number_formated = f"whatsapp:+" + str(user["telefone"])
+        flow_status = None
+
+        try:
+            user_flow = await flow_entity.select_stage_from_user_id(int(user["id"]))
+            flow_status = user_flow["etapa_agendamento_exame"] + 1
+
+            functions = {
+                0: ScheduleExamFlow.init_schedule_flow,
+                1: ScheduleExamFlow.define_specialty_consult,
+                2: ScheduleExamFlow.define_unity_consult,
+                3: ScheduleExamFlow.define_date_consult,
+                4: ScheduleExamFlow.define_time_consult,
+                5: ScheduleExamFlow.define_necessity_consult,
+            }
+
+            validator = {
+                3: Input_validator.validate_date_schedule,
+                4: ScheduleExamFlow.check_conflict
+            }
+
+            replies = {
+                1: ScheduleExamFlow.load_unities,
+                2: ScheduleExamFlow.get_last_time_schedule,
+                3: ScheduleExamFlow.send_request_time_schedule,
+                4: ScheduleExamFlow.send_request_necessity
+            }
+
+            function = functions.get(user_flow["etapa_agendamento_exame"])
+            response_function = replies.get(user_flow["etapa_agendamento_exame"])
+            validator = validator.get(user_flow["etapa_agendamento_exame"])
+
+            if validator:
+                validated_value = await validator(self, message, user, number_formated, flow_status)
+                if not validated_value['value']:
+                    reply = "Por favor, digite um valor válido"
+                    await send_message(reply, number_formated)
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST, detail=reply
+                    )
+                else:
+                    # Update user data
+                    result = await function(self, user, validated_value['content'], flow_status)
+
+            elif function:
+                result = await function(self, user, message, flow_status)
+
+            if response_function is not None:
+                response = await response_function(self, user, number_formated, message, flow_status)
+
+        except Exception as error:
+            message_log = "Erro ao atualizar os dados do usuário no banco de dados"
+            log = Logging(message_log)
+            await log.warning(
+                "flow_registration",
+                None,
+                str(error),
+                500,
+                {"params": {"message": message, "user": user}},
+            )
 
     async def define_specialty_consult(self, user: dict, message: str, flow_status: int) -> Response | HTTPException:
         """
@@ -44,7 +209,7 @@ class ScheduleExamFlow:
             return consult_data
 
         except Exception as error:
-            message_log = "Erro ao definir a especialidade da consulta no banco de dados"
+            message_log = "Erro ao definir a especialidade do exame no banco de dados"
             log = Logging(message_log)
             await log.warning(
                 "define_specialty_consult",
@@ -75,12 +240,12 @@ class ScheduleExamFlow:
                 user["id"], "etapa_agendamento_exame", flow_status
             )
             consult_data = await consult_entity.update_schedule_from_id(
-                schedule_data["id"], "id_unidade", message
+                schedule_data["id"], "id_unidade", int(message)
             )
             return consult_data
 
         except Exception as error:
-            message_log = "Erro ao registrar a unidade da consulta no banco de dados"
+            message_log = "Erro ao registrar a unidade do exame no banco de dados"
             log = Logging(message_log)
             await log.warning(
                 "define_unity_consult",
@@ -119,7 +284,7 @@ class ScheduleExamFlow:
             )
 
         except Exception as error:
-            message_log = "Erro ao registrar a data da consulta no banco de dados"
+            message_log = "Erro ao registrar a data do exame no banco de dados"
             log = Logging(message_log)
             await log.warning(
                 "define_date_consult",
@@ -162,7 +327,7 @@ class ScheduleExamFlow:
             return consult_data
 
         except Exception as error:
-            message_log = "Erro ao registrar a hora da consulta no banco de dados"
+            message_log = "Erro ao registrar a hora do exame no banco de dados"
             log = Logging(message_log)
             await log.warning(
                 "define_time_consult",
@@ -193,10 +358,13 @@ class ScheduleExamFlow:
             await flow_entity.update_flow_from_user_id(
                 user["id"], "fluxo_agendamento_exame", 0
             )
-            consult_data = await consult_entity.update_schedule_from_id(
-                schedule_data["id"], "descricao_necessidade", str(message)
+            all_data = await consult_entity.select_all_data_from_schedule_with_id(
+                schedule_data["id"]
             )
-            consult_data
+            await ScheduleExamFlow.finalize_schedule_flow(self, user, message, flow_status)
+            content = f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {await format_date_for_user(all_data['data_agendamento'])} as {await format_time_for_user(all_data['horario_inicio_agendamento'])} horas para a sua consulta com o {all_data['specialty_info']['nome']}"
+            return await send_message(content, f"whatsapp:+{user['telefone']}")
+            return consult_data
 
         except Exception as error:
             message_log = "Erro ao registrar a necessidade do usuário no banco de dados!"
@@ -227,15 +395,16 @@ class ScheduleExamFlow:
                 user["id"], "etapa_agendamento_exame", 0
             )
             await flow_entity.update_flow_from_user_id(
-                user["id"], "fluxo_agendamento_consulta", 0
+                user["id"], "fluxo_agendamento_exame", 0
             )
             all_data = await consult_entity.select_all_data_from_schedule_with_id(
                 schedule_data["id"]
             )
+
             return all_data
 
         except Exception as error:
-            message_log = "Erro ao finalizar o fluxo de agendamento de consulta"
+            message_log = "Erro ao finalizar o fluxo de agendamento de exame"
             log = Logging(message_log)
             await log.warning(
                 "finalize_schedule_flow",

@@ -4,6 +4,7 @@ from fastapi import (APIRouter, Body, Depends, HTTPException, Request,
                      Response, status)
 
 from api.services.chatbot.bot.flows.schedule_consult_flow import ScheduleConsultFlow
+from api.services.chatbot.bot.flows.schedule_exam_flow import ScheduleExamFlow
 
 from ..services.chatbot.bot.dispatcher import BotDispatcher, BotOptions
 from ..services.chatbot.bot.replies import Replies
@@ -76,8 +77,8 @@ class Bot:
                     )
 
                 elif user_stage and user_stage["fluxo_agendamento_exame"] == 1:
-                    await dispatcher.data_schedule_exam_update_flow(
-                        user, message
+                    await ScheduleExamFlow.data_schedule_exam_update_flow(
+                        self, user, message
                     )
 
             if bot_response is not None and "message" in bot_response:
