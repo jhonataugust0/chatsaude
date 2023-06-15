@@ -15,7 +15,8 @@ class Input_validator():
         """
         try:
             regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b"
-            return True if (re.fullmatch(regex, email)) else False
+            result = True if re.fullmatch(regex, email) else False
+            return {'value': result, 'content': email}
 
         except Exception as error:
             message_log = f"Erro ao validar o email {email}"
@@ -40,7 +41,7 @@ class Input_validator():
             day, month, year = map(int, date.split("/"))
 
             if month < 1 or month > 12 or year <= 0:
-                return False
+                return {'value': False, 'content': None}
 
             # verifica qual o último day do mês
             if month in (1, 3, 5, 7, 8, 10, 12):
@@ -54,7 +55,7 @@ class Input_validator():
                 last_day = 30
 
             if day < 1 or day > last_day:
-                return False
+                return {'value': False, 'content': None}
 
             else:
                 new_date = f"{year}-{month}-{day}"
@@ -69,7 +70,7 @@ class Input_validator():
                 # hour_informed = datetime.datetime.strftime(hour_informed,"%Y-%m-%d")
                 # if hour_informed >= compare_hour:
                 #   hour_informed = datetime.datetime.strftime(hour_informed, "%Y-%m-%d")
-                return hour_informed
+                return {'value': True, 'content': hour_informed}
 
         except Exception as error:
             message_log = f"Erro ao validar a data {date}"
@@ -94,10 +95,10 @@ class Input_validator():
             # date_informed = datetime.datetime.strftime(date_informed,"%Y-%m-%d")
 
             if date_informed >= current_date:
-                return date_informed
+                return {'value': True, 'content': date_informed}
 
             else:
-                return False
+                return {'value': False, 'content': None}
 
         except Exception as error:
             message_log = f"Erro ao validar a data {date_schedule}"

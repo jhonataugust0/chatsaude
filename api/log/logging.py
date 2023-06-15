@@ -5,7 +5,7 @@ import pytz
 import os
 
 class Logging:
-    filename = '.\log\log.txt'
+    filename = 'api/log/log.txt'
     filemode = "a"
     format = """####### %(levelname)s ####### \nDATA: %(asctime)s \n%(message)s\n"""
     datefmt = '%d/%m/%y %H:%M:%S'
@@ -15,7 +15,7 @@ class Logging:
 
     async def config(self):
         """
-            Método de configuração do Log
+            Método de configuração do Logging
         """
         logging.basicConfig(
             filename=Logging.filename,
@@ -27,12 +27,14 @@ class Logging:
 
     async def info(self):
         """
-            Método informativo do Log
+            Método informativo do Logging
         """
-        self.config()
+        if os.path.exists(Logging.filename):
+            os.makedirs('.api/log/log.txt', exist_ok=True)
+        await self.config()
         logger = logging.getLogger("python_log")
 
-        if (logger.hasHandlers()):
+        if not (logger.hasHandlers()):
             logger.handlers.clear()
         logger.addHandler(logging.StreamHandler(sys.stdout))
 
@@ -43,7 +45,9 @@ class Logging:
         """
             Método exibidor dos erros da aplicação
         """
-        self.config()
+        if not os.path.exists(Logging.filename):
+            os.makedirs('.api/log/log.txt', exist_ok=True)
+        await self.config()
         logger = logging.getLogger("python_log")
 
         if (logger.hasHandlers()):
@@ -52,10 +56,8 @@ class Logging:
         logger.addHandler(logging.StreamHandler(sys.stdout))
 
         current_hour = datetime.datetime.strftime(datetime.datetime.now(pytz.timezone("America/Sao_Paulo")), "%d-%m-%y %H:%M").replace('-','/')
-        mensagem = f"""
-            \n####### ERRO #######\nDATA: {current_hour}\nFUNCAO: {function}\nUSUARIO: {user}\nSTATUS: {status}\nMENSAGEM: {self.message}\nPARAMETROS: {parametros}\nERRO: {error}
-        """
-        logger.warning(mensagem)
+        mensagem = f"""\n####### ERRO #######\nDATA: {current_hour}\nFUNCAO: {function} \nUSUARIO: {user} \nSTATUS: {status}  \nMENSAGEM: {self.message} \nPARAMETROS: {parametros}\nERRO: {error}"""
+        logger.warning(f'{mensagem}', extra={"tags": {"service": "python-loki-test"}})
 
 
 

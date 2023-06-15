@@ -158,7 +158,6 @@ class AgendamentoConsultaRepository:
                     select(Agendamentos, Usuario)
                     .join(Usuario, Agendamentos.id_usuario == Usuario.id)
                     .where(Usuario.telefone == cellphone)
-                    .order_by(Agendamentos.id.desc())
                 )
                 result = await connection.execute(query)
                 row = result.fetchone()

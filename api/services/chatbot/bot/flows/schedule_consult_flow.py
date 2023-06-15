@@ -80,6 +80,12 @@ class ScheduleConsultFlow:
             number_formated,
         )
 
+    async def send_request_necessity(self, user, number_formated, message, flow_status):
+        await send_message(
+            "Opcional: Digite o que está sentindo ou a necessidade da consulta.\nDigite qualquer coisa para ignorar e concluir o agendamento",
+            number_formated,
+        )
+
     async def check_conflict(self, message, user, number_formated, flow_status):
         consult_entity = AgendamentoConsultaRepository()
         data_schedule = (
@@ -96,14 +102,15 @@ class ScheduleConsultFlow:
                 await get_more_forty_five(message),
                 data_schedule["id"],
             )
-            return message if conflict == True else True
-        return message
-
-    async def send_conflicting_message(self, user, number_formated, message, flow_status):
-        await send_message(
-                "Desculpe, esse horário está indisponível, por favor, informe um horário no mínimo superior ao informado anteriormente",
-                number_formated,
-            )
+            if conflict == False:
+                return {'value': True, 'content': message}
+            else:
+                await send_message(
+                    "Desculpe, esse horário está indisponível, por favor, informe um horário no mínimo superior ao informado anteriormente",
+                    number_formated,
+                )
+                return {'value': False, 'content': None}
+        return {'value': True, 'content': message}
 
     async def data_schedule_consult_update_flow(self, user: dict, message: str):
         """
@@ -139,7 +146,7 @@ class ScheduleConsultFlow:
                 1: ScheduleConsultFlow.load_unities,
                 2: ScheduleConsultFlow.get_last_time_schedule,
                 3: ScheduleConsultFlow.send_request_time_schedule,
-                4: ScheduleConsultFlow.send_conflicting_message,
+                4: ScheduleConsultFlow.send_request_necessity
             }
 
             function = functions.get(user_flow["etapa_agendamento_consulta"])
@@ -148,7 +155,7 @@ class ScheduleConsultFlow:
 
             if validator:
                 validated_value = await validator(self, message, user, number_formated, flow_status)
-                if not validated_value:
+                if not validated_value['value']:
                     reply = "Por favor, digite um valor válido"
                     await send_message(reply, number_formated)
                     raise HTTPException(
@@ -156,15 +163,14 @@ class ScheduleConsultFlow:
                     )
                 else:
                     # Update user data
-                    result = await function(self, user, validated_value, flow_status)
+                    result = await function(self, user, validated_value['content'], flow_status)
 
             elif function:
                 result = await function(self, user, message, flow_status)
-                # prompt = await Replies.get_prompt(user_flow["etapa_registro"], flow_status)
 
             if response_function is not None:
                 response = await response_function(self, user, number_formated, message, flow_status)
-            # await send_message(response, number_formated)
+
         except Exception as error:
             message_log = "Erro ao atualizar os dados do usuário no banco de dados"
             log = Logging(message_log)

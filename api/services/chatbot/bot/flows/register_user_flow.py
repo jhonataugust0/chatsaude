@@ -54,7 +54,7 @@ class RegisterUserFlow:
 
             if validator:
                 validated_value = await validator(message)
-                if not validated_value:
+                if not validated_value['value']:
                     reply = "Por favor, digite um valor válido"
                     await send_message(reply, number_formated)
                     raise HTTPException(
@@ -62,13 +62,13 @@ class RegisterUserFlow:
                     )
                 else:
                     # Update user data
-                    await function(self, user, validated_value, flow_status)
+                    await function(self, user, validated_value['content'], flow_status)
                     prompt = await Replies.get_prompt(user_flow["etapa_registro"], flow_status)
                     await send_message(prompt, number_formated)
 
             elif function:
                 await function(self, user, message, flow_status)
-                prompt = str(Replies.REGISTER_FULL)
+                prompt = await Replies.get_prompt(user_flow["etapa_registro"], flow_status)
                 await send_message(prompt, number_formated)
 
         except Exception as error:
@@ -257,7 +257,7 @@ class RegisterUserFlow:
             await user_entity.update_user_data(
                 user["telefone"],
                 "cpf",
-                message,
+                int(message),
             )
             await flow_entity.update_flow_from_user_id(
                 user["id"], "etapa_registro", flow_status

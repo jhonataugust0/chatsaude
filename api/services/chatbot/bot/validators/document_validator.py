@@ -18,9 +18,10 @@ class Document_validator():
             model = re.compile(r'^\d{5}-?\d{3}$')
 
             if model.match(str(cep)):
-                return cep
+                return {'value': True, 'content': cep}
             else:
-                return False
+                return {'value': False, 'content': None}
+
         except Exception as error:
             message_log = f"Erro ao validar o CEP {cep}"
             log = Logging(message_log)
@@ -30,6 +31,7 @@ class Document_validator():
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
+
     @classmethod
     async def validate_cns(cls, numbers: str) -> bool:
         """
@@ -50,9 +52,9 @@ class Document_validator():
                     soma = soma + int(number[i]) * (15 - i)
                     i = i + 1
                 if soma % 11 == 0:
-                    return number
+                    return {'value': True, 'content': number}
                 else:
-                    return False
+                    return {'value': False, 'content': None}
 
         except Exception as error:
             message_log = f"Erro ao validar o cartão do sus {numbers}"
@@ -80,21 +82,23 @@ class Document_validator():
 
             #  Verifica se o CPF tem 11 dígitos
             if len(cpf) != 11:
-                return False
+                return {'value': False, 'content': None}
 
             #  Verifica se o CPF tem todos os números iguais, ex: 111.111.111-11
             #  Esses CPFs são considerados inválidos mas passam na validação dos dígitos
             #  Antigo código para referência: if all(cpf[i] == cpf[i+1] for i in range (0, len(cpf)-1))
             if cpf == cpf[::-1]:
-                return False
+                return {'value': False, 'content': None}
 
             #  Valida os dois dígitos verificadores
             for i in range(9, 11):
                 value = sum((cpf[num] * ((i + 1) - num) for num in range(0, i)))
                 digit = ((value * 10) % 11) % 10
                 if digit != cpf[i]:
-                    return False
-            return int(''.join(str(x) for x in cpf))
+                    return {'value': False, 'content': None}
+            result = bool(int(''.join(str(x) for x in cpf)))
+            dict = {'value': result, 'content': numbers}
+            return dict
 
         except Exception as error:
             message_log = f"Erro ao validar o CPF {numbers}"

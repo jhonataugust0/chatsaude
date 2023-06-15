@@ -9,7 +9,6 @@ class Replies:
     REPORT = (
         "Por favor, descreva o ocorrido que te aborreceu, garantimos sua anonimidade"
     )
-    REGISTER_FULL = "Obrigado por se cadastrar em nossa plataforma, digite algo para ver o que podemos oferecer."
 
     @classmethod
     async def default_reply(self, verify_stage_user):
@@ -65,4 +64,7 @@ class Replies:
         elif current_step == 7:
             if next_step == 8:
                 return f"Digite seu bairro:\nEx: Eustáquio Gomes"
+        elif current_step == 8:
+            if next_step == 9:
+                return f"Obrigado por se cadastrar em nossa plataforma, digite algo para ver o que podemos oferecer."
         return ""
