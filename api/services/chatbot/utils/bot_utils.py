@@ -39,7 +39,7 @@ async def send_message(message: str, number: str) -> Response | HTTPException:
         message_log = "Erro ao enviar mensagem para o whatsapp"
         log = Logging(message_log)
         await log.warning(
-            "await send_message",
+            "#await send_message",
             None,
             str(error),
             500,

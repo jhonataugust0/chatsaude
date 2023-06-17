@@ -38,7 +38,7 @@ class Input_validator():
         """
         try:
             # Faz o split e transforma em números
-            day, month, year = map(int, date.split("/"))
+            year, month, day = map(int, date.split("-"))
 
             if month < 1 or month > 12 or year <= 0:
                 return {'value': False, 'content': None}

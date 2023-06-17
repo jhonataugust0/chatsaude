@@ -33,7 +33,7 @@ class ScheduleExamFlow:
         unities = await unities_entity.select_all()
         for i in unities:
             unities_text = f"""Unidade {i['id']}: {i['nome'].split('(')[0]}\nEndereço: {i['endereco'].replace(',','').split('s/n')[0]}\nBairro: {i['bairro']}\nHorario de funcionamento: {i['horario_funcionamento']}"""
-            await send_message(unities_text, number_formated)
+            #await send_message(unities_text, number_formated)
 
         return Response(
             status_code=status.HTTP_200_OK,
@@ -58,15 +58,15 @@ class ScheduleExamFlow:
             hora = await format_time_for_user(
                 last_time[-1]["horario_termino_agendamento"]
             )
-            await send_message(
-                f"""Digite o dia que você deseja realizar o exane\nEx: 24/12/2023\nAtenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}""",
-                number_formated,
-            )
-        else:
-            await send_message(
-                f"""Digite o dia que você deseja realizar o exane\nEx: 24/12/2023""",
-                number_formated,
-            )
+            #await send_message(
+            #     f"""Digite o dia que você deseja realizar o exane\nEx: 24/12/2023\nAtenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}""",
+            #     number_formated,
+            # )
+        # else:
+            #await send_message(
+            #     f"""Digite o dia que você deseja realizar o exane\nEx: 24/12/2023""",
+            #     number_formated,
+            # )
 
         return Response(
             status_code=status.HTTP_200_OK,
@@ -74,17 +74,18 @@ class ScheduleExamFlow:
         )
 
     async def send_request_time_schedule(self, user, number_formated, message, flow_status):
-        await send_message(
-            "Digite o horário que deseja realizar o exame (atente-se para o horário estar dentro do período de funcionamento da unidade escolhida)\nEx: 08:00",
-            number_formated,
-        )
+        #await send_message(
+        #     "Digite o horário que deseja realizar o exame (atente-se para o horário estar dentro do período de funcionamento da unidade escolhida)\nEx: 08:00",
+        #     number_formated,
+        # )
+        pass
 
     async def send_request_necessity(self, user, number_formated, message, flow_status):
-        await send_message(
-            "Opcional: Digite o que está sentindo ou a necessidade do exame.\nDigite qualquer coisa para ignorar e concluir o agendamento",
-            number_formated,
-        )
-
+        #await send_message(
+        #     "Opcional: Digite o que está sentindo ou a necessidade do exame.\nDigite qualquer coisa para ignorar e concluir o agendamento",
+        #     number_formated,
+        # )
+        pass
     async def check_conflict(self, message, user, number_formated, flow_status):
         consult_entity = AgendamentoExameRepository()
         data_schedule = (
@@ -104,10 +105,10 @@ class ScheduleExamFlow:
             if conflict == False:
                 return {'value': True, 'content': message}
             else:
-                await send_message(
-                    "Desculpe, esse horário está indisponível, por favor, informe um horário no mínimo superior ao informado anteriormente",
-                    number_formated,
-                )
+                #await send_message(
+                #     "Desculpe, esse horário está indisponível, por favor, informe um horário no mínimo superior ao informado anteriormente",
+                #     number_formated,
+                # )
                 return {'value': False, 'content': None}
         return {'value': True, 'content': message}
 
@@ -156,7 +157,7 @@ class ScheduleExamFlow:
                 validated_value = await validator(self, message, user, number_formated, flow_status)
                 if not validated_value['value']:
                     reply = "Por favor, digite um valor válido"
-                    await send_message(reply, number_formated)
+                    #await send_message(reply, number_formated)
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST, detail=reply
                     )
@@ -363,7 +364,7 @@ class ScheduleExamFlow:
             )
             await ScheduleExamFlow.finalize_schedule_flow(self, user, message, flow_status)
             content = f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {await format_date_for_user(all_data['data_agendamento'])} as {await format_time_for_user(all_data['horario_inicio_agendamento'])} horas para a sua consulta com o {all_data['specialty_info']['nome']}"
-            return await send_message(content, f"whatsapp:+{user['telefone']}")
+            return #await send_message(content, f"whatsapp:+{user['telefone']}")
             return consult_data
 
         except Exception as error:
