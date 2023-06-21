@@ -1,11 +1,14 @@
-from ..routes.bot import Bot
+from api.schemas.user_message_base import UserMessageBase
+from api.schemas.user_message_email import UserMessageEmail
+from api.services.user.models.repository.user_repository import UserRepository
+from .bot import Bot
 from ..services.chatbot.bot.flows.register_user_flow import RegisterUserFlow
 from api.services.chatbot.bot.validators.input_validator import Input_validator
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 
 
-class User:
-    def __init__(self, tags: str = ["User"]):
+class RegisterUser:
+    def __init__(self, tags: str = ["RegisterUser"]):
         self.router = APIRouter(tags=tags)
         self.router.add_api_route(
             name="Registra o usuário",
@@ -70,43 +73,54 @@ class User:
             methods=["POST"],
             include_in_schema=True,
         )
+        self.router.add_api_route(
+            name="Define o email do usuário",
+            path="/verify_user_is_registered",
+            endpoint=self.verify_user_is_registered,
+            methods=["POST"],
+            include_in_schema=True,
+        )
 
-    async def register_user(self, request: Request):
-        bot_message = Bot()
-        input = await bot_message.message(request)
-        message = input['content']['message']
-        number = input['content']['number']
+    async def verify_user_is_registered(self, params: UserMessageBase):
+        message = params.results.message.value
+        number = int(params.contact.urn)
+        user_entity = UserRepository()
+        results = await user_entity.select_user_from_cellphone(number)
+        if results.get('id') != None:
+            return {'status': 200, 'content': 'Usuário registrado com sucesso'}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Usuário não registrado"
+            )
+
+    async def register_user(self, params: UserMessageBase):
+        message = params.results.message.value
+        number = int(params.contact.urn)
         register_user_entity = RegisterUserFlow(number)
         await register_user_entity.initialize()
         await register_user_entity.insert_user_and_flow(number)
         return {'status': 200, 'content': 'Usuário registrado com sucesso'}
 
 
-    async def set_name(self, request: Request):
-        bot_message = Bot()
-        input = await bot_message.message(request)
-        message = input['content']['message']
-        number = input['content']['number']
+    async def set_name(self, params: UserMessageBase) -> dict:
+        message = params.results.message.value
+        number = int(params.contact.urn)
         register_user_entity = RegisterUserFlow(number)
         await register_user_entity.initialize()
         await register_user_entity.define_user_name(message)
         return {'status': 200, 'content': 'Nome definido com sucesso'}
 
-    async def set_email(self, request: Request):
-        bot_message = Bot()
-        input = await bot_message.message(request)
-        message = input['content']['message']
-        number = input['content']['number']
+    async def set_email(self, params: UserMessageEmail) -> dict:
+        message = params.results.message.value
+        number = int(params.contact.urn)
         register_user_entity = RegisterUserFlow(number)
         await register_user_entity.initialize()
         await register_user_entity.define_user_email(message)
         return {'status': 200, 'content': 'Email definido com sucesso'}
 
-    async def set_nascient_date(self, request: Request):
-        bot_message = Bot()
-        input = await bot_message.message(request)
-        message = input['content']['message'].split('T')[0]
-        number = input['content']['number']
+    async def set_nascient_date(self, params: UserMessageBase) -> dict:
+        message = params.results.message.value.split('T')[0]
+        number = int(params.contact.urn)
         validated_date = await Input_validator.validate_nascent_date(message)
         if validated_date['value']:
             register_user_entity = RegisterUserFlow(number)
@@ -118,51 +132,41 @@ class User:
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Por favor, digite uma data válida"
             )
 
-    async def set_cep(self, request: Request):
-        bot_message = Bot()
-        input = await bot_message.message(request)
-        message = input['content']['message']
-        number = input['content']['number']
+    async def set_cep(self, params: UserMessageBase) -> dict:
+        message = params.results.message.value
+        number = int(params.contact.urn)
         register_user_entity = RegisterUserFlow(number)
         await register_user_entity.initialize()
         await register_user_entity.define_user_cep(message)
         return {'status': 200, 'content': 'CEP definido com sucesso'}
 
-    async def set_cpf(self, request: Request):
-        bot_message = Bot()
-        input = await bot_message.message(request)
-        message = input['content']['message']
-        number = input['content']['number']
+    async def set_cpf(self, params: UserMessageBase) -> dict:
+        message = params.results.message.value
+        number = int(params.contact.urn)
         register_user_entity = RegisterUserFlow(number)
         await register_user_entity.initialize()
         await register_user_entity.define_user_cpf(message)
         return {'status': 200, 'content': 'CPF definido com sucesso'}
 
-    async def set_rg(self, request: Request):
-        bot_message = Bot()
-        input = await bot_message.message(request)
-        message = input['content']['message']
-        number = input['content']['number']
+    async def set_rg(self, params: UserMessageBase) -> dict:
+        message = params.results.message.value
+        number = int(params.contact.urn)
         register_user_entity = RegisterUserFlow(number)
         await register_user_entity.initialize()
         await register_user_entity.define_user_rg(message)
         return {'status': 200, 'content': 'RG definido com sucesso'}
 
-    async def set_cns(self, request: Request):
-        bot_message = Bot()
-        input = await bot_message.message(request)
-        message = input['content']['message']
-        number = input['content']['number']
+    async def set_cns(self, params: UserMessageBase) -> dict:
+        message = params.results.message.value
+        number = int(params.contact.urn)
         register_user_entity = RegisterUserFlow(number)
         await register_user_entity.initialize()
         await register_user_entity.define_user_cns(message)
         return {'status': 200, 'content': 'CNS definida com sucesso'}
 
-    async def set_district(self, request: Request):
-        bot_message = Bot()
-        input = await bot_message.message(request)
-        message = input['content']['message']
-        number = input['content']['number']
+    async def set_district(self, params: UserMessageBase) -> dict:
+        message = params.results.message.value
+        number = int(params.contact.urn)
         register_user_entity = RegisterUserFlow(number)
         await register_user_entity.initialize()
         await register_user_entity.define_user_district(message)

@@ -49,7 +49,7 @@ class UserRepository:
                 await connection.close()
 
 
-    async def select_user_from_cellphone(self, cellphone) -> Dict[str, Usuario]:
+    async def select_user_from_cellphone(self, cellphone: int) -> Dict[str, Usuario]:
         """
         Busca no banco a linha de dados do usuário informado
           :params cellphone: int

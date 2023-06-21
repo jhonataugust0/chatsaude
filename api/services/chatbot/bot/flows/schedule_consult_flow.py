@@ -15,37 +15,28 @@ from api.services.health_agents.models.repository.especialidade_repository impor
 
 
 class ScheduleConsultFlow:
-    def __init__(self, lang="br") -> None:
+    def __init__(self, number: int, lang="br") -> None:
         self.lang = lang
+        self.number = number
 
-    async def init_schedule_flow(self, user, message, flow_status):
-        flow_entity = FluxoEtapaRepository()
-        consult_flow_stage = await flow_entity.update_flow_from_user_id(
-            user["id"], "etapa_agendamento_consulta", 1
-        )
-        return Response(
-            status_code=status.HTTP_200_OK,
-            content="Fluxo atualizado com sucesso",
-        )
+    async def initialize(self):
+        self.user = await UserRepository().select_user_from_cellphone(self.number)
+        if self.user.get('id') != None:
+            self.user_flow = await FluxoEtapaRepository().select_stage_from_user_id(self.user['id'])
 
-    async def load_unities(self, user, number_formated, message, flow_status):
-        send_message("Escolha a unidade suportada mais próxima de você\nDigite o número correspondente ao da unidade desejada\nEx: 1", number_formated)
+    async def load_unities(self):
         unities_entity = UnidadeRepository()
         unities = await unities_entity.select_all()
+        unities_text = ""
         for i in unities:
-            unities_text = f"""Unidade {i['id']}: {i['nome'].split('(')[0]}\nEndereço: {i['endereco'].replace(',','').split('s/n')[0]}\nBairro: {i['bairro']}\nHorario de funcionamento: {i['horario_funcionamento']}"""
-            #await send_message(unities_text, number_formated)
+            unities_text += f"""Unidade {i['id']}: {i['nome'].split('(')[0]}\nEndereço: {i['endereco'].replace(',','').split('s/n')[0]}\nBairro: {i['bairro']}\nHorario de funcionamento: {i['horario_funcionamento']}\n"""
+        return unities_text
 
-        return Response(
-            status_code=status.HTTP_200_OK,
-            content="Mensagem enviada com sucesso",
-        )
-
-    async def get_last_time_schedule(self, user, number_formated, message, flow_status):
+    async def get_last_time_schedule(self):
         consult_entity = AgendamentoConsultaRepository()
         data_schedule = (
             await consult_entity.select_data_schedule_from_user_cellphone(
-                int(user["telefone"])
+                int(self.user["telefone"])
             )
         )
         last_time = (
@@ -59,15 +50,9 @@ class ScheduleConsultFlow:
             hora = await format_time_for_user(
                 last_time[-1]["horario_termino_agendamento"]
             )
-            #await send_message(
-            #     f"""Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023\nAtenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}""",
-            #     number_formated,
-            # )
-        # else:
-            #await send_message(
-            #     f"""Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023""",
-            #     number_formated,
-            # )
+            return f"""Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023\nAtenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}"""
+        else:
+            return """Digite o dia que você deseja realizar a consulta\nEx: 24/12/2023"""
 
         return Response(
             status_code=status.HTTP_200_OK,
@@ -102,14 +87,8 @@ class ScheduleConsultFlow:
                 await get_more_forty_five(message),
                 data_schedule["id"],
             )
-            if conflict == False:
-                return {'value': True, 'content': message}
-            else:
-                #await send_message(
-                #     "Desculpe, esse horário está indisponível, por favor, informe um horário no mínimo superior ao informado anteriormente",
-                #     number_formated,
-                # )
-                return {'value': False, 'content': None}
+            return {'value': True, 'content': message} if not conflict else {'value': False, 'content': None}
+
         return {'value': True, 'content': message}
 
     async def data_schedule_consult_update_flow(self, user: dict, message: str):
@@ -125,7 +104,7 @@ class ScheduleConsultFlow:
         flow_status = None
 
         try:
-            user_flow = await flow_entity.select_stage_from_user_id(int(user["id"]))
+            user_flow = await flow_entity.select_stage_from_user_id(int(self.user["id"]))
             flow_status = user_flow["etapa_agendamento_consulta"] + 1
 
             functions = {
@@ -182,9 +161,19 @@ class ScheduleConsultFlow:
                 {"params": {"message": message, "user": user}},
             )
 
+    async def init_schedule_flow(self):
+        flow_entity = FluxoEtapaRepository()
+        schedule_consult_entity = AgendamentoConsultaRepository()
+        await flow_entity.update_flow_from_user_id(
+            self.user["id"], "etapa_agendamento_consulta", 1
+        )
+        await schedule_consult_entity.insert_new_schedule_consult(self.user["id"]),
+        return Response(
+            status_code=status.HTTP_200_OK,
+            content="Fluxo atualizado com sucesso",
+        )
 
-
-    async def define_specialty_consult(self, user: dict, message: str, flow_status: int) -> Response | HTTPException:
+    async def define_specialty_consult(self, message: str) -> Response | HTTPException:
         """
         Método responsável por definir a especialidade da con-
         sulta do usuário
@@ -195,14 +184,14 @@ class ScheduleConsultFlow:
         consult_entity = AgendamentoConsultaRepository()
         flow_entity = FluxoEtapaRepository()
         specialty_entity = EspecialidadeRepository()
-
+        flow_status = self.user_flow["etapa_agendamento_consulta"] + 1
         try:
-            schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
+            schedule_data = await consult_entity.select_data_schedule_from_user_id(self.user["id"])
             specialty_user_request = (
                 await specialty_entity.select_specialty_from_name(message)
             )
             await flow_entity.update_flow_from_user_id(
-                user["id"], "etapa_agendamento_consulta", flow_status
+                self.user["id"], "etapa_agendamento_consulta", flow_status
             )
             consult_data = await consult_entity.update_schedule_from_id(
                 schedule_data["id"],
@@ -219,13 +208,13 @@ class ScheduleConsultFlow:
                 None,
                 str(error),
                 500,
-                {"params": {"message": message, "user": user, 'flow_status': flow_status}},
+                {"params": {"message": message, "user": self.user, 'flow_status': flow_status}},
             )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_unity_consult(self, user: dict, message: str, flow_status: int) -> Response | HTTPException:
+    async def define_unity_consult(self, message: str) -> Response | HTTPException:
         """
         Método responsável por definir unidade da consulta do
         usuário no banco de dados
@@ -236,11 +225,12 @@ class ScheduleConsultFlow:
         consult_entity = AgendamentoConsultaRepository()
         flow_entity = FluxoEtapaRepository()
         specialty_entity = EspecialidadeRepository()
+        flow_status = self.user_flow["etapa_agendamento_consulta"] + 1
 
         try:
-            schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
+            schedule_data = await consult_entity.select_data_schedule_from_user_id(self.user["id"])
             user_flow = await flow_entity.update_flow_from_user_id(
-                user["id"], "etapa_agendamento_consulta", flow_status
+                self.user["id"], "etapa_agendamento_consulta", flow_status
             )
             consult_data = await consult_entity.update_schedule_from_id(
                 schedule_data["id"], "id_unidade", int(message)
@@ -255,13 +245,13 @@ class ScheduleConsultFlow:
                 None,
                 str(error),
                 500,
-                {"params": {"message": message, "user": user, 'flow_status': flow_status}},
+                {"params": {"message": message, "user": self.user, 'flow_status': flow_status}},
             )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_date_consult(self, user: dict, date: str, flow_status: int) -> Response | HTTPException:
+    async def define_date_consult(self, date: str) -> Response | HTTPException:
         """
         Método responsável por definir a data da consulta do
         usuário no banco de dados
@@ -272,11 +262,12 @@ class ScheduleConsultFlow:
         consult_entity = AgendamentoConsultaRepository()
         flow_entity = FluxoEtapaRepository()
         specialty_entity = EspecialidadeRepository()
+        flow_status = self.user_flow["etapa_agendamento_consulta"] + 1
 
         try:
-            schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
+            schedule_data = await consult_entity.select_data_schedule_from_user_id(self.user["id"])
             user_flow = await flow_entity.update_flow_from_user_id(
-                user["id"], "etapa_agendamento_consulta", flow_status
+                self.user["id"], "etapa_agendamento_consulta", flow_status
             )
             await consult_entity.update_schedule_from_id(
                 schedule_data["id"], "data_agendamento", date
@@ -294,13 +285,13 @@ class ScheduleConsultFlow:
                 None,
                 str(error),
                 500,
-                {"params": {"date": date, "user": user, 'flow_status': flow_status}},
+                {"params": {"date": date, "user": self.user, 'flow_status': flow_status}},
             )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_time_consult(self, user: dict, message: str, flow_status: int) -> Response | HTTPException:
+    async def define_time_consult(self, message: str) -> Response | HTTPException:
         """
         Método responsável por definir hora da consulta do
         usuário no banco de dados
@@ -310,11 +301,11 @@ class ScheduleConsultFlow:
         """
         consult_entity = AgendamentoConsultaRepository()
         flow_entity = FluxoEtapaRepository()
-        specialty_entity = EspecialidadeRepository()
+        flow_status = self.user_flow["etapa_agendamento_consulta"] + 1
         try:
-            schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
+            schedule_data = await consult_entity.select_data_schedule_from_user_id(self.user["id"])
             user_flow = await flow_entity.update_flow_from_user_id(
-                user["id"], "etapa_agendamento_consulta", flow_status
+                self.user["id"], "etapa_agendamento_consulta", flow_status
             )
             final_schedule = await get_more_forty_five(str(message))
             consult_data = await consult_entity.update_schedule_from_id(
@@ -337,13 +328,13 @@ class ScheduleConsultFlow:
                 None,
                 str(error),
                 500,
-                {"params": {"message": message, "user": user, 'flow_status': flow_status}},
+                {"params": {"message": message, "user": self.user, 'flow_status': flow_status}},
             )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_necessity_consult(self, user: dict, message: str, flow_status: int) -> Response | HTTPException:
+    async def define_necessity_consult(self, message: str) -> Response | HTTPException:
         """
         Método responsável por definir a necessidade da
         consulta do usuário no banco de dados
@@ -353,12 +344,12 @@ class ScheduleConsultFlow:
         """
         consult_entity = AgendamentoConsultaRepository()
         flow_entity = FluxoEtapaRepository()
+        flow_status = self.user_flow["etapa_agendamento_consulta"] + 1
         try:
-            schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
+            schedule_data = await consult_entity.select_data_schedule_from_user_id(self.user["id"])
             consult_data = await consult_entity.update_schedule_from_id(
                 schedule_data["id"], "descricao_necessidade", str(message)
             )
-            await ScheduleConsultFlow.finalize_schedule_flow(self, user, message, flow_status)
             return consult_data
 
         except Exception as error:
@@ -369,13 +360,13 @@ class ScheduleConsultFlow:
                 None,
                 str(error),
                 500,
-                {"params": {"message": message, "user": user}},
+                {"params": {"message": message, "user": self.user}},
             )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def finalize_schedule_flow(self, user: dict, message: str, flow_status: int) -> Response | HTTPException:
+    async def finalize_schedule_flow(self) -> Response | HTTPException:
         """
         Método responsável por finalizar o fluxo de agendamento
             :params user: dict
@@ -384,20 +375,20 @@ class ScheduleConsultFlow:
         """
         consult_entity = AgendamentoConsultaRepository()
         flow_entity = FluxoEtapaRepository()
+        flow_status = self.user_flow["etapa_agendamento_consulta"] + 1
         try:
-            schedule_data = await consult_entity.select_data_schedule_from_user_id(user["id"])
+            schedule_data = await consult_entity.select_data_schedule_from_user_id(self.user["id"])
             await flow_entity.update_flow_from_user_id(
-                user["id"], "etapa_agendamento_consulta", 0
+                self.user["id"], "etapa_agendamento_consulta", 0
             )
             await flow_entity.update_flow_from_user_id(
-                user["id"], "fluxo_agendamento_consulta", 0
+                self.user["id"], "fluxo_agendamento_consulta", 0
             )
             all_data = await consult_entity.select_all_data_from_schedule_with_id(
                 schedule_data["id"]
             )
             content = f"Que ótimo, você realizou seu agendamento!\nCompareça à unidade {all_data['unity_info']['nome']} no dia {await format_date_for_user(all_data['data_agendamento'])} as {await format_time_for_user(all_data['horario_inicio_agendamento'])} horas para a sua consulta com o {all_data['specialty_info']['nome']}"
-            return #await send_message(content, f"whatsapp:+{user['telefone']}")
-            return all_data
+            return content
 
         except Exception as error:
             message_log = "Erro ao finalizar o fluxo de agendamento de consulta"
@@ -407,7 +398,7 @@ class ScheduleConsultFlow:
                 None,
                 str(error),
                 500,
-                {"params": {"message": message, "user": user}},
+                {"params": {"user": self.user}},
             )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log

@@ -3,6 +3,8 @@ import pytz
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status
 from api.log.logging import Logging
+from api.services.chatbot.utils.date import get_more_forty_five
+from api.services.schedules.consult.models.repository.consulta_agendameno_repository import AgendamentoConsultaRepository
 
 class Input_validator():
 
@@ -82,14 +84,14 @@ class Input_validator():
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def validate_date_schedule(self, date_schedule, user=None, number_formated=None, message=None, flow_status=None):
+    async def validate_date_schedule(self, date_schedule):
         try:
             current_date = datetime.now(pytz.timezone("America/Sao_Paulo"))
             current_date = datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
             current_date = current_date.split(" ")[0]
 
-            parse_informed_date = date_schedule.split("/")
-            parse_informed_date = f"{parse_informed_date[2]}-{parse_informed_date[1]}-{parse_informed_date[0]}"
+            parse_informed_date = date_schedule.split("T")[0]
+            # parse_informed_date = f"{parse_informed_date[2]}-{parse_informed_date[1]}-{parse_informed_date[0]}"
             date_informed = datetime.strptime(parse_informed_date, "%Y-%m-%d")
             current_date = datetime.strptime(current_date, "%Y-%m-%d")
             # date_informed = datetime.datetime.strftime(date_informed,"%Y-%m-%d")
@@ -113,3 +115,23 @@ class Input_validator():
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
+    @classmethod
+    async def check_conflict(cls, message, cellphone):
+        consult_entity = AgendamentoConsultaRepository()
+        data_schedule = (
+            await consult_entity.select_data_schedule_from_user_cellphone(
+                int(cellphone)
+            )
+        )
+        if data_schedule['horario_inicio_agendamento'] != None:
+            conflict = await consult_entity.check_conflicting_schedule(
+                data_schedule["id_unidade"],
+                data_schedule["id_especialidade"],
+                data_schedule["data_agendamento"],
+                str(message) + ":00",
+                await get_more_forty_five(message),
+                data_schedule["id"],
+            )
+            return {'value': True, 'content': message} if not conflict else {'value': False, 'content': None}
+
+        return {'value': True, 'content': message}
