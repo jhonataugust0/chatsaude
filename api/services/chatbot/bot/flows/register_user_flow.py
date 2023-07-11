@@ -1,5 +1,4 @@
 from fastapi import HTTPException, Response, status
-from api.services.chatbot.bot.replies import Replies
 from api.services.chatbot.bot.validators.document_validator import Document_validator
 
 from api.services.chatbot.bot.validators.input_validator import Input_validator
@@ -20,7 +19,7 @@ class RegisterUserFlow:
         if self.user.get('id') != None:
             self.user_flow = await FluxoEtapaRepository().select_stage_from_user_id(self.user['id'])
 
-    async def insert_user_and_flow(self, number: int):
+    async def insert_user_and_flow(self, number: int) -> bool:
         user_entity = UserRepository()
         stage_entity = FluxoEtapaRepository()
 
@@ -28,7 +27,7 @@ class RegisterUserFlow:
         await stage_entity.insert_new_user_flow(new_user["id"], 1, 1)
         return True
 
-    async def define_user_name(self, message: str) -> Response | HTTPException:
+    async def define_user_name(self, message: str) -> bool | HTTPException:
         """
             Método responsável por registrar o nome do usuário
             no banco de dados.
@@ -46,7 +45,7 @@ class RegisterUserFlow:
             await flow_entity.update_flow_from_user_id(
                 self.user["id"], "etapa_registro", flow_status
             )
-            return {'status': 200, 'content': "Nome definido com sucesso"}
+            return True
 
         except Exception as error:
             message_log = "Erro ao registrar o nome do usuário no banco de dados"
@@ -62,7 +61,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_email(self, message) -> Response | HTTPException:
+    async def define_user_email(self, message) -> bool | HTTPException:
         """
             Método responsável por registrar o email do usuário
             no banco de dados.
@@ -80,10 +79,7 @@ class RegisterUserFlow:
             await flow_entity.update_flow_from_user_id(
                 self.user["id"], "etapa_registro", flow_status
             )
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content="Email registrado com sucesso",
-            )
+            return True
 
         except Exception as error:
             message_log = "Erro ao registrar o email do usuário no banco de dados"
@@ -99,7 +95,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_nascent_date(self, nescient_date: str) -> Response | HTTPException:
+    async def define_user_nascent_date(self, nescient_date: str) -> bool | HTTPException:
         """
             Método responsável por registrar a data de nascença
             do usuário no banco de dados.
@@ -118,10 +114,7 @@ class RegisterUserFlow:
             await flow_entity.update_flow_from_user_id(
                 self.user["id"], "etapa_registro", flow_status
             )
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content="Data de nascimento registrada com sucesso",
-            )
+            return True
 
         except Exception as error:
             message_log = "Erro ao registrar a data de nascimento do usuário no banco de dados"
@@ -137,7 +130,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_cep(self, message: str) -> Response | HTTPException:
+    async def define_user_cep(self, message: str) -> bool | HTTPException:
         """
             Método responsável por registrar o CEP do usuário
             no banco de dados.
@@ -156,10 +149,7 @@ class RegisterUserFlow:
             await flow_entity.update_flow_from_user_id(
                 self.user["id"], "etapa_registro", flow_status
             )
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content="CEP registrado com sucesso",
-            )
+            return True
 
         except Exception as error:
             message_log = "Erro ao registrar o email do usuário no banco de dados"
@@ -175,7 +165,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_cpf(self, message: str) -> Response | HTTPException:
+    async def define_user_cpf(self, message: str) -> bool | HTTPException:
         """
             Método responsável por registrar o CPF do usuário
             no banco de dados.
@@ -196,10 +186,7 @@ class RegisterUserFlow:
             await flow_entity.update_flow_from_user_id(
                 self.user["id"], "etapa_registro", flow_status
             )
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content="CPF registrado com sucesso",
-            )
+            return True
 
         except Exception as error:
             message_log = "Erro ao registrar o CPF do usuário no banco de dados"
@@ -215,7 +202,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_rg(self, message: str) -> Response | HTTPException:
+    async def define_user_rg(self, message: str) -> bool | HTTPException:
         """
             Método responsável por registrar o RG do usuário
             no banco de dados.
@@ -234,10 +221,7 @@ class RegisterUserFlow:
             await flow_entity.update_flow_from_user_id(
                 self.user["id"], "etapa_registro", flow_status
             )
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content="RG registrado com sucesso",
-            )
+            return True
 
         except Exception as error:
             message_log = "Erro ao registrar o RG do usuário no banco de dados"
@@ -253,7 +237,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_cns(self, message: str) -> Response | HTTPException:
+    async def define_user_cns(self, message: str) -> bool | HTTPException:
         """
             Método responsável por registrar o cartão do SUS
             do usuário no banco de dados.
@@ -274,10 +258,7 @@ class RegisterUserFlow:
             await flow_entity.update_flow_from_user_id(
                 self.user["id"], "etapa_registro", flow_status
             )
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content="CNS registrado com sucesso",
-            )
+            return True
 
         except Exception as error:
             message_log = "Erro ao registrar o CNS do usuário no banco de dados"
@@ -293,7 +274,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_district(self, message: str) -> Response | HTTPException:
+    async def define_user_district(self, message: str) -> bool | HTTPException:
         """
             Método responsável por registrar bairro do usuário
             no banco de dados.
@@ -317,10 +298,7 @@ class RegisterUserFlow:
             )
             info = "Usuário cadastrado com êxito"
             log = await Logging(info).info()
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content="Bairro registrado com sucesso",
-            )
+            return True
 
         except Exception as error:
             message_log = "Erro ao registrar o bairro do usuário no banco de dados"

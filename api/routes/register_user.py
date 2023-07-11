@@ -1,5 +1,4 @@
 from api.schemas.user_message_base import UserMessageBase
-from api.schemas.user_message_email import UserMessageEmail
 from api.services.user.models.repository.user_repository import UserRepository
 from .bot import Bot
 from ..services.chatbot.bot.flows.register_user_flow import RegisterUserFlow
@@ -110,7 +109,7 @@ class RegisterUser:
         await register_user_entity.define_user_name(message)
         return {'status': 200, 'content': 'Nome definido com sucesso'}
 
-    async def set_email(self, params: UserMessageEmail) -> dict:
+    async def set_email(self, params: UserMessageBase) -> dict:
         message = params.results.message.value
         number = int(params.contact.urn)
         register_user_entity = RegisterUserFlow(number)
@@ -119,18 +118,13 @@ class RegisterUser:
         return {'status': 200, 'content': 'Email definido com sucesso'}
 
     async def set_nascient_date(self, params: UserMessageBase) -> dict:
-        message = params.results.message.value.split('T')[0]
+        message = params.results.message.value
         number = int(params.contact.urn)
-        validated_date = await Input_validator.validate_nascent_date(message)
-        if validated_date['value']:
-            register_user_entity = RegisterUserFlow(number)
-            await register_user_entity.initialize()
-            await register_user_entity.define_user_nascent_date(validated_date['content'])
-            return {'status': 200, 'content': 'Data de nascimento definida com sucesso'}
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Por favor, digite uma data válida"
-            )
+        register_user_entity = RegisterUserFlow(number)
+        await register_user_entity.initialize()
+        await register_user_entity.define_user_nascent_date(message)
+        return {'status': 200, 'content': 'Data de nascimento definida com sucesso'}
+
 
     async def set_cep(self, params: UserMessageBase) -> dict:
         message = params.results.message.value

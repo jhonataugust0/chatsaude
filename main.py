@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from api.routes.bot import Bot
 from api.routes.register_user import RegisterUser
 from api.routes.schedule_consult import ScheduleConsult
+from api.routes.schedule_exam import ScheduleExam
 app = FastAPI()
 
 origins = ["*"]
@@ -14,10 +15,12 @@ origins = ["*"]
 bot = Bot()
 user = RegisterUser()
 schedule_consult = ScheduleConsult()
+exam_consult = ScheduleExam()
 
 app.include_router(bot.router)
 app.include_router(user.router)
 app.include_router(schedule_consult.router)
+app.include_router(exam_consult.router)
 
 app.add_middleware(
     CORSMiddleware,

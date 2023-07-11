@@ -1,57 +1,65 @@
-from dataclasses import Field
-import os
-from typing import Dict, List
-from pydantic import BaseModel, validator, root_validator, fields
+from pydantic import BaseModel, ValidationError, validator, root_validator, fields
 from datetime import datetime
-from datetime import date as date_type
-from datetime import time as time_type
 
 from fastapi import HTTPException
 from fastapi import APIRouter, Depends, HTTPException
+from api.services.chatbot.bot.validators.document_validator import Document_validator
+
+from api.services.chatbot.bot.validators.input_validator import Input_validator
+
 
 class Contact(BaseModel):
     name: str
     urn: str
     uuid: str
 
-    #weni simulator
+    # weni simulator
+    # @validator("urn", pre=True)
+    # def validate_urn(cls, urn):
+    #     urn = int(str(urn.split("+")[1]))
+    #     return int(urn)
+
+    # whatsapp
     @validator('urn', pre=True)
     def validate_urn(cls, urn):
-        urn = int(str(urn.split('+')[1]))
+        urn = int(str(urn.split(':')[1]))
         return int(urn)
 
-    #whatsapp
-    # @validator('urn', pre=True)
-    # def validate_urn(cls, urn):
-    #     urn = int(str(urn.split(':')[1]))
-    #     return int(urn)
 
 class Flow(BaseModel):
     name: str
     uuid: str
 
+
 class Message(BaseModel):
     category: str
-    value: str
+    value: str | datetime
 
     @root_validator(pre=True)
     def validate_field(cls, values):
         types_validators = {
-            'message': lambda value: cls.validate_value(value),
-            # 'cpf': validate_cpf,
-            # 'email': validate_email
+            "message": Input_validator.validate_message,
+            'email': Input_validator.validate_email,
+            'date_nascient': Input_validator.validate_nascent_date,
+            'cep': Document_validator.validate_cep,
+            'cpf': Document_validator.validate_cpf,
+            'cns': Document_validator.validate_cns,
+            'date_schedule': Input_validator.validate_date_schedule,
         }
 
-        if values['category'] in types_validators:
-            validator_func = types_validators.get(values['category'])
-            validator_func(values['value'])
-            return values['value']
-
-    @classmethod
-    def validate_value(cls, value):
-        if not isinstance(value, str):
-            raise HTTPException(status_code=400, detail='O campo "value" deve ser uma string.')
-        return value
+        category = values.get('category')
+        if category in types_validators:
+            validator_func = types_validators[category]
+            result_func = validator_func(values.get('value'))
+            if result_func['value']:
+                values['value'] = result_func['content']
+                return values
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"O valor informado para {category} não é válido",
+                )
+        return values
 
 
 class Return(BaseModel):
@@ -61,11 +69,8 @@ class Return(BaseModel):
 class Results(BaseModel):
     message: Message
 
+
 class UserMessageBase(BaseModel):
     contact: Contact
     flow: Flow
     results: Results
-
-    # @validator('contact', pre=True)
-    # def validate_urn(cls, contact):
-    #     contact['urn'] = int(str(contact['urn'].split('+')[1]))

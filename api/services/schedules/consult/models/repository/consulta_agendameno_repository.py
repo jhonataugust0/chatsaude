@@ -157,7 +157,8 @@ class AgendamentoConsultaRepository:
                 query = (
                     select(Agendamentos, Usuario)
                     .join(Usuario, Agendamentos.id_usuario == Usuario.id)
-                    .where(Usuario.telefone == cellphone)
+                    .where(Usuario.telefone == cellphone, Agendamentos.ativo == 1)
+                    .order_by(Agendamentos.id.desc())
                 )
                 result = await connection.execute(query)
                 row = result.fetchone()
@@ -423,8 +424,9 @@ class AgendamentoConsultaRepository:
                         Agendamentos.id_unidade == unity_id,
                         Agendamentos.data_agendamento != None,
                         Agendamentos.horario_termino_agendamento != None,
+                        Agendamentos.ativo == 1,
                     )
-                    .order_by(Agendamentos.id.desc())
+                    .order_by(Agendamentos.data_agendamento)
                 )
                 result = await connection.execute(query)
                 keys = ["data_agendamento", "horario_termino_agendamento"]

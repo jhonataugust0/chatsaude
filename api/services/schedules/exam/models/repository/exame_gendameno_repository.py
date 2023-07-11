@@ -157,7 +157,7 @@ class AgendamentoExameRepository:
                 query = (
                     select(AgendamentoExame, Usuario)
                     .join(Usuario, AgendamentoExame.id_usuario == Usuario.id)
-                    .where(Usuario.telefone == cellphone)
+                    .where(Usuario.telefone == cellphone, AgendamentoExame.ativo == 1)
                     .order_by(AgendamentoExame.id.desc())
                 )
                 result = await connection.execute(query)
@@ -425,7 +425,7 @@ class AgendamentoExameRepository:
                         AgendamentoExame.data_agendamento != None,
                         AgendamentoExame.horario_termino_agendamento != None,
                     )
-                    .order_by(AgendamentoExame.id.desc())
+                    .order_by(AgendamentoExame.data_agendamento)
                 )
                 result = await connection.execute(query)
                 keys = ["data_agendamento", "horario_termino_agendamento"]

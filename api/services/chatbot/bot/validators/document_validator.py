@@ -5,8 +5,8 @@ from api.log.logging import Logging
 
 class Document_validator():
 
-    @classmethod
-    async def validate_cep(cls, cep: str) -> bool:
+    @staticmethod
+    def validate_cep(cep: str)  -> dict:
         """
             Verificação matemática para a validação do número do
             cartão CEP do usuário
@@ -23,17 +23,12 @@ class Document_validator():
                 return {'value': False, 'content': None}
 
         except Exception as error:
-            message_log = f"Erro ao validar o CEP {cep}"
-            log = Logging(message_log)
-            await log.warning(
-                "validate_cpf", None, str(error), 500, {"params": {"cep": cep}}
-            )
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao validar cep {cep}"
             )
 
-    @classmethod
-    async def validate_cns(cls, numbers: str) -> bool:
+    @staticmethod
+    def validate_cns(numbers: str)  -> dict:
         """
         Verificação matemática para a validação do número do
         cartão do SUS do usuário
@@ -57,18 +52,12 @@ class Document_validator():
                     return {'value': False, 'content': None}
 
         except Exception as error:
-            message_log = f"Erro ao validar o cartão do sus {numbers}"
-            log = Logging(message_log)
-            await log.warning(
-                "validate_cns", None, str(error), 500, {"params": {"numbers": numbers}}
-            )
-
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao validar o cartão do sus {numbers}"
             )
 
-    @classmethod
-    async def validate_cpf(cls, numbers: str) -> bool:
+    @staticmethod
+    def validate_cpf(numbers: str)  -> dict:
         """
         Verificação matemática para a validação do número de
         CPF do usuário
@@ -101,11 +90,6 @@ class Document_validator():
             return dict
 
         except Exception as error:
-            message_log = f"Erro ao validar o CPF {numbers}"
-            log = Logging(message_log)
-            await log.warning(
-                "validate_cpf", None, str(error), 500, {"params": {"numbers": numbers}}
-            )
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao validar o CPF {numbers}"
             )
