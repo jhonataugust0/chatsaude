@@ -278,7 +278,7 @@ class ScheduleExamFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def finalize_schedule_flow(self, user: dict, message: str, flow_status: int) -> Response | HTTPException:
+    async def finalize_schedule_flow(self) -> str | HTTPException:
         """
         Método responsável por finalizar o fluxo de agendamento
             :params user: dict
@@ -288,12 +288,12 @@ class ScheduleExamFlow:
         exam_entity = AgendamentoExameRepository()
         flow_entity = FluxoEtapaRepository()
         try:
-            schedule_data = await exam_entity.select_data_schedule_from_user_id(user["id"])
+            schedule_data = await exam_entity.select_data_schedule_from_user_id(self.user["id"])
             await flow_entity.update_flow_from_user_id(
-                user["id"], "etapa_agendamento_exame", 0
+                self.user["id"], "etapa_agendamento_exame", 0
             )
             await flow_entity.update_flow_from_user_id(
-                user["id"], "fluxo_agendamento_exame", 0
+                self.user["id"], "fluxo_agendamento_exame", 0
             )
             all_data = await exam_entity.select_all_data_from_schedule_with_id(
                 schedule_data["id"]
@@ -309,7 +309,7 @@ class ScheduleExamFlow:
                 None,
                 str(error),
                 500,
-                {"params": {"message": message, "user": user}},
+                {"params": {"user": self.user}},
             )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log

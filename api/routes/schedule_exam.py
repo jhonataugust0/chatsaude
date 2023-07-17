@@ -18,7 +18,7 @@ class ScheduleExam:
         )
         self.router.add_api_route(
             name="Define o nome do usuário",
-            path="/set_specialty",
+            path="/set_specialty_exam",
             endpoint=self.set_specialty_exam,
             methods=["POST"],
             include_in_schema=True,
@@ -95,10 +95,13 @@ class ScheduleExam:
 
     async def set_exam_time(self, params: UserMessageBase) -> dict:
         message = params.results.message.value
+        hour = str(message).split('.')[0]
+        hour = str(message).split(':')
+        hour = f"{hour[0]}:{hour[1]}"
         number = int(params.contact.urn)
         schedule_exam_entity = ScheduleExamFlow(number)
         await schedule_exam_entity.initialize()
-        validated_date = await schedule_exam_entity.check_conflict(message)
+        validated_date = await schedule_exam_entity.check_conflict(hour)
         if validated_date['value']:
             await schedule_exam_entity.define_time_exam(validated_date['content'])
             return {'status': 200, 'content': 'Hora da exama definida com sucesso'}
