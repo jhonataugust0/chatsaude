@@ -14,16 +14,16 @@ class Contact(BaseModel):
     uuid: str
 
     # weni simulator
-    @validator("urn", pre=True)
-    def validate_urn(cls, urn):
-        urn = int(str(urn.split("+")[1]))
-        return int(urn)
+    # @validator("urn", pre=True)
+    # def validate_urn(cls, urn):
+    #     urn = int(str(urn.split("+")[1]))
+    #     return int(urn)
 
     # whatsapp
-    # @validator('urn', pre=True)
-    # def validate_urn(cls, urn):
-    #     urn = int(str(urn.split(':')[1]))
-    #     return int(urn)
+    @validator('urn', pre=True)
+    def validate_urn(cls, urn):
+        urn = int(str(urn.split(':')[1]))
+        return int(urn)
 
 
 class Flow(BaseModel):

@@ -67,7 +67,7 @@ class UserRepository:
                 return {}
 
             except Exception as error:
-                message = "Erro ao resgatar os dados do usuário"
+                message = f"Erro ao resgatar os dados do usuário de telefone {cellphone}"
                 log = Logging(message)
                 await log.warning(
                     "select_user_from_cellphone",
@@ -151,7 +151,7 @@ class UserRepository:
                 return {}
 
             except Exception as error:
-                message = "Erro ao atualizar um fluxo existente no banco de dados"
+                message = f"Erro ao atualizar o usuário de telefone {telefone}"
                 log = Logging(message)
                 await log.warning(
                     "update_user_data",
@@ -177,12 +177,12 @@ class UserRepository:
                 return True
 
             except NoResultFound:
-                message = f"Não foi possível encontrar o usuário com nome {cellphone}"
+                message = f"Não foi possível encontrar o usuário com telefone {cellphone}"
                 log = await Logging(message).info()
                 return {}
 
             except Exception as error:
-                message = f"Erro ao excluir o usuário com nome {cellphone}"
+                message = f"Erro ao excluir o usuário com telefone {cellphone}"
                 log = Logging(message)
                 await log.warning(
                     "delete", None, error, 500, {"params": {"cellphone": cellphone}}

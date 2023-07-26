@@ -38,7 +38,7 @@ class ScheduleExamFlow:
             )
         )
         last_time = (
-            await exam_entity.get_last_time_scheduele_from_specialty_id(
+            await exam_entity.get_next_available_time(
                 int(data_schedule["id_especialidade"]),
                 int(data_schedule["id_unidade"]),
             )

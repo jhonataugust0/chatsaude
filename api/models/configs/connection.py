@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from asyncio.queues import Queue
 
 class Connection:
-    def __init__(self, connection_url, pool_size=5):
+    def __init__(self, connection_url, pool_size=15):
         self.url_connection = connection_url
         self.pool_size = pool_size
         self.engine = None

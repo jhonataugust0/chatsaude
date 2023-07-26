@@ -66,7 +66,7 @@ class FluxoEtapaRepository:
                 return {}
 
             except Exception as error:
-                message = "Erro ao resgatar dados do usuário"
+                message = "Erro ao resgatar a etapa do usuário"
                 log = Logging(message)
                 await log.warning(
                     "select_stage_from_user_id",
@@ -155,7 +155,7 @@ class FluxoEtapaRepository:
                 return flow_dict
 
             except Exception as error:
-                message = "Erro ao atualizar os dados do usuário"
+                message = "Erro ao atualizar o fluxo do usuário"
                 log = Logging(message)
                 await log.warning(
                     "update_flow_from_user_id",
@@ -192,7 +192,7 @@ class FluxoEtapaRepository:
                 return None
 
             except Exception as error:
-                message = f"Erro ao excluir o agendamento do usuário {user_id}"
+                message = f"Erro ao excluir o fluxo do usuário de id: {user_id}"
                 log = Logging(message)
                 await log.warning(
                     "delete_flow_from_user_id",

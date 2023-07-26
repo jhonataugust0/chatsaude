@@ -1,7 +1,8 @@
+from datetime import datetime
 import os
 from typing import Any, Dict, List, Optional, Union
 from fastapi import HTTPException, Response, status
-from sqlalchemy import (MetaData, and_, delete, desc, select, text, tuple_,
+from sqlalchemy import (MetaData, and_, delete, desc, func, or_, select, text, tuple_,
                         update)
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -40,7 +41,7 @@ class AgendamentoExameRepository:
                 return {}
 
             except Exception as error:
-                message = "Erro ao resgatar dados de agendamento"
+                message = "Erro ao resgatar os agendamentos"
                 log = Logging(message)
                 await log.warning("select_all", None, error, 500, {"params": None})
                 raise HTTPException(
@@ -295,7 +296,7 @@ class AgendamentoExameRepository:
                 return None
 
             except Exception as error:
-                message = "Erro ao atualizar os dados do usuário"
+                message = "Erro ao atualizar os dados do agendamento"
                 log = Logging(message)
                 await log.warning(
                     "update_schedule_from_user_id",
@@ -346,7 +347,7 @@ class AgendamentoExameRepository:
                 return None
 
             except Exception as error:
-                message = "Erro ao atualizar os dados do usuário"
+                message = "Erro ao atualizar os dados do agendamento"
                 log = Logging(message)
                 await log.warning(
                     "update_schedule_from_id",
@@ -396,25 +397,21 @@ class AgendamentoExameRepository:
             finally:
                 await connection.close()
 
-    async def get_last_time_scheduele_from_specialty_id(self, specialty_id: int, unity_id: int) -> Dict[str, AgendamentoExame]:
+    async def get_next_available_time(self, specialty_id: int, unity_id: int) -> Dict[str, AgendamentoExame]:
         """
-            Método responsável por consultar o banco a fim de
-            retornar a a data e o horário da última consulta
-            marcada para a especialidade e unidade que o pa-
-            ciente está tentando marcar
+        Método responsável por consultar o banco a fim de retornar a próxima e menor data disponível
+        para agendamento da especialidade e unidade informadas.
 
-            :params specialty_id: int
-            :params unity_id: int
-            :return: dict
+        :params specialty_id: int
+        :params unity_id: int
+        :return: dict
         """
         async with Connection(connection_url=self.connection_url) as connection:
             try:
-                columns = [
-                    AgendamentoExame.data_agendamento,
-                    AgendamentoExame.horario_termino_agendamento,
-                ]
+                now = datetime.now()  # Obtém a data e hora atual
 
-                query = (
+                # Encontra a última consulta marcada para a especialidade e unidade informadas
+                last_scheduled_query = (
                     select(
                         AgendamentoExame.data_agendamento,
                         AgendamentoExame.horario_termino_agendamento,
@@ -422,12 +419,44 @@ class AgendamentoExameRepository:
                     .where(
                         AgendamentoExame.id_especialidade == specialty_id,
                         AgendamentoExame.id_unidade == unity_id,
-                        AgendamentoExame.data_agendamento != None,
-                        AgendamentoExame.horario_termino_agendamento != None,
+                        AgendamentoExame.data_agendamento <= now.date(),  # Somente datas passadas ou iguais à data atual
+                        AgendamentoExame.data_agendamento.isnot(None),
+                        AgendamentoExame.horario_termino_agendamento.isnot(None),
+                        AgendamentoExame.ativo == 1,  # Verifica se é ativo (1 representa verdadeiro)
                     )
-                    .order_by(AgendamentoExame.data_agendamento)
+                    .order_by(AgendamentoExame.data_agendamento.desc(), AgendamentoExame.horario_termino_agendamento.desc())
+                    .limit(1)
                 )
-                result = await connection.execute(query)
+
+                result = await connection.execute(last_scheduled_query)
+                last_scheduled_data = result.scalars()
+                keys = ["data_agendamento", "horario_termino_agendamento"]
+                last_scheduled_data = [dict(zip(keys, values)) for values in result]
+                # Encontra a primeira data disponível após a última data agendada
+                next_available_query = (
+                    select(
+                        AgendamentoExame.data_agendamento,
+                        func.min(AgendamentoExame.horario_termino_agendamento).label("horario_termino_agendamento"),
+                    )
+                    .where(
+                        AgendamentoExame.id_especialidade == specialty_id,
+                        AgendamentoExame.id_unidade == unity_id,
+                        or_(
+                            and_(
+                                AgendamentoExame.data_agendamento == last_scheduled_data["data_agendamento"],
+                                AgendamentoExame.horario_termino_agendamento > last_scheduled_data["horario_termino_agendamento"],
+                            ),
+                            AgendamentoExame.data_agendamento > last_scheduled_data["data_agendamento"],
+                        ),
+                        AgendamentoExame.data_agendamento.isnot(None),
+                        AgendamentoExame.horario_termino_agendamento.isnot(None),
+                        AgendamentoExame.ativo == 1,  # Verifica se é ativo (1 representa verdadeiro)
+                    )
+                    .group_by(AgendamentoExame.data_agendamento)
+                    .order_by(AgendamentoExame.data_agendamento, "horario_termino_agendamento")
+                )
+
+                result = await connection.execute(next_available_query)
                 keys = ["data_agendamento", "horario_termino_agendamento"]
                 dict_result = [dict(zip(keys, values)) for values in result]
                 return dict_result if len(dict_result) > 0 else None
@@ -441,7 +470,7 @@ class AgendamentoExameRepository:
                 message = f"Erro ao resgatar dados de agendamentos com a especialidade de id {specialty_id} na unidade de id {unity_id}"
                 log = Logging(message)
                 await log.warning(
-                    "get_last_time_scheduele_from_specialty_id",
+                    "get_next_available_time",
                     None,
                     error,
                     500,
