@@ -4,10 +4,10 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.routes.bot import Bot
-from api.routes.register_user import RegisterUser
-from api.routes.schedule_consult import ScheduleConsult
-from api.routes.schedule_exam import ScheduleExam
+from src.gateway.routes.bot import Bot
+from src.gateway.routes.register_user import RegisterUser
+from src.gateway.routes.schedule_consult import ScheduleConsult
+from src.gateway.routes.schedule_exam import ScheduleExam
 app = FastAPI()
 
 origins = ["*"]
