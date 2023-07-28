@@ -415,26 +415,42 @@ class AgendamentoConsultaRepository:
                         f"""
                             CREATE OR REPLACE FUNCTION data_disponivel()
                             RETURNS TABLE(data_agendamento date, horario_termino_agendamento time) AS $$
+                            DECLARE
+                                agora time := current_time;
                             BEGIN
                                 RETURN QUERY
+                                WITH datas_possiveis AS (
+                                    SELECT
+                                        CURRENT_DATE + seq as data_agendamento
+                                    FROM
+                                        generate_series(0, 15) as seq
+                                ), horarios_comerciais AS (
+                                    SELECT
+                                        time '08:00:00' as horario_inicio,
+                                        time '18:00:00' as horario_fim
+                                )
                                 SELECT
-                                    agendamento_consulta.data_agendamento,
-                                    agendamento_consulta.horario_termino_agendamento
+                                    dp.data_agendamento,
+                                    hc.horario_inicio as horario_termino_agendamento
                                 FROM
-                                    agendamento_consulta
-                                WHERE
-                                    agendamento_consulta.id_especialidade = {specialty_id}
-                                    AND agendamento_consulta.id_unidade = {unity_id}
-                                    AND agendamento_consulta.data_agendamento BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '15 days')
-                                    AND agendamento_consulta.data_agendamento IS NOT NULL
-                                    AND agendamento_consulta.horario_termino_agendamento IS NOT NULL
-                                    AND agendamento_consulta.ativo = 1
-                                GROUP BY
-                                    agendamento_consulta.data_agendamento,
-                                    agendamento_consulta.horario_termino_agendamento
+                                    datas_possiveis dp
+                                    CROSS JOIN horarios_comerciais hc
+                                WHERE NOT EXISTS (
+                                    SELECT 1
+                                    FROM
+                                        agendamento_consulta ac
+                                    WHERE
+                                        ac.id_especialidade = 5
+                                        AND ac.id_unidade = 1
+                                        AND ac.data_agendamento = dp.data_agendamento
+                                        AND ac.horario_termino_agendamento = hc.horario_inicio
+                                        AND ac.ativo = 1
+                                )
+                                AND dp.data_agendamento > CURRENT_DATE
+                                AND (dp.data_agendamento > CURRENT_DATE OR hc.horario_inicio >= agora)
                                 ORDER BY
-                                    agendamento_consulta.data_agendamento ASC,
-                                    agendamento_consulta.horario_termino_agendamento ASC
+                                    dp.data_agendamento ASC,
+                                    hc.horario_inicio ASC
                                 LIMIT 1;
                             END;
                             $$ LANGUAGE plpgsql;
@@ -445,7 +461,10 @@ class AgendamentoConsultaRepository:
                     text(f"SELECT * FROM data_disponivel();")
                 )
                 check = check.fetchall()
-                return {'data_agendamento': check[0][0], 'horario_termino_agendamento': check[0][1]}
+                if len(check) > 0:
+                    return {'data_agendamento': check[0][0], 'horario_termino_agendamento': check[0][1]}
+                else:
+                    return []
 
             except NoResultFound:
                 message = f"Não foi possível encontrar agendamentos com a especialidade de id {specialty_id} na unidade de id {unity_id}"

@@ -73,8 +73,13 @@ class ScheduleExam:
         number = int(params.contact.urn)
         schedule_exam_entity = ScheduleExamFlow(number)
         await schedule_exam_entity.initialize()
-        await schedule_exam_entity.define_specialty_exam(message)
-        return {'status': 200, 'content': 'Especialidade definida com sucesso'}
+        response = await schedule_exam_entity.define_specialty_exam(message)
+        if 'id_especialidade' in response and response['id_especialidade'] is not None:
+            return {'status': 200, 'content': 'Especialidade definida com sucesso'}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Desculpe, não foi possível identificar a especialidade solicitada, por favor, tente novamente ou entre em contato com o time de desenvolvimento através de chatsaude.al@gmail.com"
+            )
 
     async def set_unity_exam(self, params: UserMessageBase) -> dict:
         message = params.results.message.value

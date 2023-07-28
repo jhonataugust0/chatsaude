@@ -119,7 +119,8 @@ class ScheduleConsultFlow:
                 500,
                 {"params": {"message": message, "user": self.user, 'flow_status': flow_status}},
             )
-            return {'status_code': status.HTTP_500_INTERNAL_SERVER_ERROR, 'detail': f"Desculpe, não foi possível identificar a especialidade solicitada, {ScheduleConsultFlow.raise_message}"}
+            raise_message =  f"Desculpe, não foi possível definir a especialidade solicitada, {ScheduleConsultFlow.raise_message}"
+            return {'status_code': status.HTTP_500_INTERNAL_SERVER_ERROR, 'detail': raise_message}
 
     async def define_unity_consult(self, message: str) -> bool | HTTPException:
         """

@@ -12,6 +12,8 @@ from src.services.health_agents.models.repository.especialidade_repository impor
 
 
 class ScheduleExamFlow:
+    raise_message = "tente novamente ou entre em contato com o time de desenvolvimento através de chatsaude.al@gmail.com"
+
     def __init__(self, number: int, lang="br") -> None:
         self.lang = lang
         self.number = number
@@ -38,15 +40,15 @@ class ScheduleExamFlow:
             )
         )
         last_time = (
-            await exam_entity.get_next_available_time(
+            await exam_entity.get_last_time_scheduele_from_specialty_id(
                 int(data_schedule["id_especialidade"]),
                 int(data_schedule["id_unidade"]),
             )
         )
         if data_schedule["id_unidade"] and last_time:
-            data = await format_date_for_user(last_time[-1]["data_agendamento"])
+            data = await format_date_for_user(last_time["data_agendamento"])
             hora = await format_time_for_user(
-                last_time[-1]["horario_termino_agendamento"]
+                last_time["horario_termino_agendamento"]
             )
             return f"""Digite o dia que você deseja realizar a exama\nEx: 24/12/2023\nAtenção, para essa especialidade somente temos horários a partir do dia {data}, a partir das {hora}"""
         else:
@@ -104,12 +106,12 @@ class ScheduleExamFlow:
             await flow_entity.update_flow_from_user_id(
                 self.user["id"], "etapa_agendamento_exame", flow_status
             )
-            await exam_entity.update_schedule_from_id(
+            response = await exam_entity.update_schedule_from_id(
                 schedule_data["id"],
                 "id_especialidade",
                 specialty_user_request["id"],
             )
-            return True
+            return response
 
         except Exception as error:
             message_log = "Erro ao definir a especialidade do exame no banco de dados"
@@ -121,9 +123,8 @@ class ScheduleExamFlow:
                 500,
                 {"params": {"message": message, "user": self.user, 'flow_status': flow_status}},
             )
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
-            )
+            raise_message = raise_message =  f"Desculpe, não foi possível definir o exame solicitado, {ScheduleExamFlow.raise_message}"
+            return {'status_code': status.HTTP_500_INTERNAL_SERVER_ERROR, 'detail': raise_message}
 
     async def define_unity_exam(self, message: str) -> bool | HTTPException:
         """
@@ -158,8 +159,9 @@ class ScheduleExamFlow:
                 500,
                 {"params": {"message": message, "user": self.user, 'flow_status': flow_status}},
             )
+            raise_message = f"Desculpe, não foi possível registrar adequadamente a unidade solicitada, {ScheduleExamFlow.raise_message}"
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=raise_message
             )
 
     async def define_date_exam(self, date: str) -> bool | HTTPException:
@@ -195,8 +197,9 @@ class ScheduleExamFlow:
                 500,
                 {"params": {"date": date, "user": self.user, 'flow_status': flow_status}},
             )
+            raise_message = f"Desculpe, não foi possível registrar adequadamente a data solicitada, {ScheduleExamFlow.raise_message}"
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=raise_message
             )
 
     async def define_time_exam(self, message: str) -> bool | HTTPException:
@@ -240,8 +243,9 @@ class ScheduleExamFlow:
                 500,
                 {"params": {"message": message, "user": self.user, 'flow_status': flow_status}},
             )
+            raise_message = f"Desculpe, não foi possível definir a hora do exame, {ScheduleExamFlow.raise_message}"
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=raise_message
             )
 
     async def define_necessity_exam(self, message: str) -> bool | HTTPException:
@@ -274,6 +278,7 @@ class ScheduleExamFlow:
                 500,
                 {"params": {"message": message, "user": self.user}},
             )
+            raise_message = f"Desculpe, não conseguimos definir a necessidade da sua consulta, {ScheduleExamFlow.raise_message}"
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )

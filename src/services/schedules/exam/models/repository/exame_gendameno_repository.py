@@ -397,38 +397,74 @@ class AgendamentoExameRepository:
             finally:
                 await connection.close()
 
-    async def get_next_available_time(self, specialty_id: int, unity_id: int) -> Dict[str, AgendamentoExame]:
+    async def get_last_time_scheduele_from_specialty_id(self, specialty_id: int, unity_id: int) -> Dict[str, AgendamentoExame]:
         """
-        Método responsável por consultar o banco a fim de retornar a próxima e menor data disponível
-        para agendamento da especialidade e unidade informadas.
+            Método responsável por consultar o banco a fim de
+            retornar a a data e o horário da última consulta
+            marcada para a especialidade e unidade que o pa-
+            ciente está tentando marcar
 
-        :params specialty_id: int
-        :params unity_id: int
-        :return: dict
+            :params specialty_id: int
+            :params unity_id: int
+            :return: dict
         """
         async with Connection(connection_url=self.connection_url) as connection:
             try:
-                now = datetime.now()  # Obtém a data e hora atual
-                current_date = func.current_date()
-                fifteen_days_later = current_date + func.cast('15 days', Date)
-                # Encontra a última consulta marcada para a especialidade e unidade informadas
-                last_scheduled_query = (
-                    AgendamentoExame.data_agendamento, AgendamentoExame.horario_termino_agendamento).filter(
-                        AgendamentoExame.id_especialidade == 1,
-                        AgendamentoExame.id_unidade == 1,
-                        AgendamentoExame.data_agendamento.between(current_date, fifteen_days_later),
-                        AgendamentoExame.data_agendamento.isnot(None),
-                        AgendamentoExame.horario_termino_agendamento.isnot(None),
-                        AgendamentoExame.ativo == 1
-                    ).group_by(AgendamentoExame.data_agendamento, AgendamentoExame.horario_termino_agendamento).order_by(
-                    AgendamentoExame.data_agendamento.asc(), AgendamentoExame.horario_termino_agendamento.asc()).limit(1).all()
-
-                result = await connection.execute(last_scheduled_query)
-                result = result.scalars()
-                keys = ["data_agendamento", "horario_termino_agendamento"]
-                result = [dict(zip(keys, values)) for values in result]
-                return result if len(result) > 0 else None
-
+                query = await connection.execute(
+                    text(
+                        f"""
+                            CREATE OR REPLACE FUNCTION data_disponivel()
+                            RETURNS TABLE(data_agendamento date, horario_termino_agendamento time) AS $$
+                            DECLARE
+                                agora time := current_time;
+                            BEGIN
+                                RETURN QUERY
+                                WITH datas_possiveis AS (
+                                    SELECT
+                                        CURRENT_DATE + seq as data_agendamento
+                                    FROM
+                                        generate_series(0, 15) as seq
+                                ), horarios_comerciais AS (
+                                    SELECT
+                                        time '08:00:00' as horario_inicio,
+                                        time '18:00:00' as horario_fim
+                                )
+                                SELECT
+                                    dp.data_agendamento,
+                                    hc.horario_inicio as horario_termino_agendamento
+                                FROM
+                                    datas_possiveis dp
+                                    CROSS JOIN horarios_comerciais hc
+                                WHERE NOT EXISTS (
+                                    SELECT 1
+                                    FROM
+                                        agendamento_exame ae
+                                    WHERE
+                                        ae.id_especialidade = 5
+                                        AND ae.id_unidade = 1
+                                        AND ae.data_agendamento = dp.data_agendamento
+                                        AND ae.horario_termino_agendamento = hc.horario_inicio
+                                        AND ae.ativo = 1
+                                )
+                                AND dp.data_agendamento > CURRENT_DATE
+                                AND (dp.data_agendamento > CURRENT_DATE OR hc.horario_inicio >= agora)
+                                ORDER BY
+                                    dp.data_agendamento ASC,
+                                    hc.horario_inicio ASC
+                                LIMIT 1;
+                            END;
+                            $$ LANGUAGE plpgsql;
+                        """
+                    )
+                )
+                check = await connection.execute(
+                    text(f"SELECT * FROM data_disponivel();")
+                )
+                check = check.fetchall()
+                if len(check) > 0:
+                    return {'data_agendamento': check[0][0], 'horario_termino_agendamento': check[0][1]}
+                else:
+                    return []
             except NoResultFound:
                 message = f"Não foi possível encontrar agendamentos com a especialidade de id {specialty_id} na unidade de id {unity_id}"
                 log = await Logging(message).info()
@@ -438,7 +474,7 @@ class AgendamentoExameRepository:
                 message = f"Erro ao resgatar dados de agendamentos com a especialidade de id {specialty_id} na unidade de id {unity_id}"
                 log = Logging(message)
                 await log.warning(
-                    "get_next_available_time",
+                    "get_last_time_scheduele_from_specialty_id",
                     None,
                     error,
                     500,
