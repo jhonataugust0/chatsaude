@@ -88,7 +88,7 @@ class ScheduleConsult:
         await schedule_consult_entity.initialize()
         await schedule_consult_entity.define_unity_consult(message)
         last_schedule = await schedule_consult_entity.get_last_time_schedule()
-        return {'status': 200, 'content': 'Email definido com sucesso', 'content': last_schedule}
+        return {'status': 200, 'content': 'Unidade definida com sucesso', 'unities': last_schedule}
 
     async def set_consult_date(self, params: UserMessageBase) -> dict:
         message = params.results.message.value
@@ -121,7 +121,7 @@ class ScheduleConsult:
         await schedule_consult_entity.initialize()
         await schedule_consult_entity.define_necessity_consult(message)
         schedule = await schedule_consult_entity.finalize_schedule_flow()
-        return {'status': 200, 'content': 'Necessidade definida com sucesso', 'content': schedule}
+        return {'status': 200, 'content': 'Necessidade definida com sucesso', 'message': schedule}
 
     async def get_unities(self, params: UserMessageBase) -> dict:
         message = params.results.message.value

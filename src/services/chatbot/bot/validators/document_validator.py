@@ -17,7 +17,7 @@ class Document_validator():
         try:
             model = re.compile(r'^\d{5}-?\d{3}$')
 
-            if model.match(str(cep)):
+            if model.match(str(cep.replace('-','').replace(' ', ''))):
                 return {'value': True, 'content': cep}
             else:
                 return {'value': False, 'content': None}
@@ -67,6 +67,7 @@ class Document_validator():
         """
         try:
             #  Obtém os números do CPF e ignora outros caracteres
+            numbers = numbers.replace('.', '').replace('-', '')
             cpf = [int(char) for char in numbers if char.isdigit()]
 
             #  Verifica se o CPF tem 11 dígitos

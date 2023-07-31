@@ -88,7 +88,7 @@ class ScheduleExam:
         await schedule_exam_entity.initialize()
         await schedule_exam_entity.define_unity_exam(message)
         last_schedule = await schedule_exam_entity.get_last_time_schedule()
-        return {'status': 200, 'content': 'Email definido com sucesso', 'content': last_schedule}
+        return {'status': 200, 'content': 'Unidade definida com sucesso', 'unities': last_schedule}
 
     async def set_exam_date(self, params: UserMessageBase) -> dict:
         message = params.results.message.value
@@ -96,7 +96,7 @@ class ScheduleExam:
         schedule_exam_entity = ScheduleExamFlow(number)
         await schedule_exam_entity.initialize()
         await schedule_exam_entity.define_date_exam(message)
-        return {'status': 200, 'content': 'Data da exama definida com sucesso'}
+        return {'status': 200, 'content': 'Data do exame definida com sucesso'}
 
     async def set_exam_time(self, params: UserMessageBase) -> dict:
         message = params.results.message.value
@@ -109,7 +109,7 @@ class ScheduleExam:
         validated_date = await schedule_exam_entity.check_conflict(hour)
         if validated_date['value']:
             await schedule_exam_entity.define_time_exam(validated_date['content'])
-            return {'status': 200, 'content': 'Hora da exama definida com sucesso'}
+            return {'status': 200, 'content': 'Hora do exame definida com sucesso'}
         else:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Desculpe, esse horário não está disponível, por favor, informe um horário posterior ao informado anteriormente para essa especialidade."
@@ -122,7 +122,7 @@ class ScheduleExam:
         await schedule_exam_entity.initialize()
         await schedule_exam_entity.define_necessity_exam(message)
         schedule = await schedule_exam_entity.finalize_schedule_flow()
-        return {'status': 200, 'content': 'Necessidade definida com sucesso', 'content': schedule}
+        return {'status': 200, 'content': 'Necessidade definida com sucesso', 'message': schedule}
 
     async def get_unities_exam(self, params: UserMessageBase) -> dict:
         message = params.results.message.value

@@ -1,173 +1,190 @@
-from locust import HttpUser, task
+import asyncio
+from datetime import datetime, timedelta
+import random
+import httpx
+from locust import HttpUser, SequentialTaskSet, task
 
 
-class locustfile(HttpUser):
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    host = "http://localhost:8000/message"
+class TestMakeSchedulingConsult(HttpUser):
+
+    headers = {
+        'Accept': 'application/json',
+        "Content-Type": "application/json",
+        }
+    host = "http://localhost:8000"
+
+    def generate_random_date(self):
+        start_date = datetime(2023, 8, 1)
+        end_date = datetime(2072, 12, 31)
+
+        days_diff = (end_date - start_date).days
+
+        random_days = random.randint(0, days_diff)
+
+        random_date = start_date + timedelta(days=random_days)
+
+        formatted_date = random_date.strftime("%Y-%m-%dT%H:%M:%S")
+        return formatted_date
+
+    def generate_random_time(self):
+        start_time = datetime.strptime("00:00:00", "%H:%M:%S")
+        end_time = datetime.strptime("23:59:59", "%H:%M:%S")
+
+        time_diff = (end_time - start_time).seconds
+
+        random_seconds = random.randint(0, time_diff)
+
+        random_time = start_time + timedelta(seconds=random_seconds)
+
+        formatted_time = random_time.strftime("%H:%M:%S")
+        return formatted_time
+
+    # async def client(self, route, json=payload):
+    #     async with httpx.AsyncClient() as client:
+    #         response =  client.post(f"{TestMakeSchedulingConsult.host}/{route}", json=payload, headers=TestMakeSchedulingConsult.headers)
+    #         response.raise_for_status()
+    #         return response.json()
+
+    def test_register_user(self):
+        payload = {
+            "contact": {
+                "name": "",
+                "urn": "tel:+12065551212",
+                "uuid": "a998eda6-caaa-47d1-9ffc-3fd7a9753c84"
+            },
+            "flow": {
+                "name": "fluxo_registro",
+                "uuid": "5b767bce-e0e8-4211-919f-4dd6e3c46913"
+            },
+            "results": {
+                "message": {
+                    "category": "message",
+                    "value": "1"
+                }
+            }
+        }
+        response =  self.client.post("/insert_schedule_consult", json=payload)
+        # assert response.get('status') == 200
+        # assert response.get('content') == 'Agendamento iniciado com sucesso'
+
+
+    def test_set_specialty(self):
+        payload = {
+            "contact": {
+                "name": "",
+                "urn": "tel:+12065551212",
+                "uuid": "a998eda6-caaa-47d1-9ffc-3fd7a9753c84"
+            },
+            "flow": {
+                "name": "fluxo_registro",
+                "uuid": "5b767bce-e0e8-4211-919f-4dd6e3c46913"
+            },
+            "results": {
+                "message": {
+                    "category": "specialty",
+                    "value": "Clínico"
+                }
+            }
+        }
+        response =  self.client.post("/set_specialty", json=payload)
+        # assert response.get('status') == 200
+        # assert response.get('content') == 'Especialidade definida com sucesso'
+
+
+    def test_set_unity(self):
+        payload = {
+            "contact": {
+                "name": "",
+                "urn": "tel:+12065551212",
+                "uuid": "a998eda6-caaa-47d1-9ffc-3fd7a9753c84"
+            },
+            "flow": {
+                "name": "fluxo_registro",
+                "uuid": "5b767bce-e0e8-4211-919f-4dd6e3c46913"
+            },
+            "results": {
+                "message": {
+                    "category": "message",
+                    "value": "1"
+                }
+            }
+        }
+        response =  self.client.post("/set_unity_consult", json=payload)
+        # assert response.get('status') == 200
+        # assert response.get('content') == 'Unidade definida com sucesso'
+
+
+    def test_set_consult_date(self):
+        payload = {
+            "contact": {
+                "name": "",
+                "urn": "tel:+12065551212",
+                "uuid": "a998eda6-caaa-47d1-9ffc-3fd7a9753c84"
+            },
+            "flow": {
+                "name": "fluxo_registro",
+                "uuid": "5b767bce-e0e8-4211-919f-4dd6e3c46913"
+            },
+            "results": {
+                "message": {
+                    "category": "date_schedule",
+                    "value": self.generate_random_date()
+                }
+            }
+        }
+        response =  self.client.post("/set_consult_date", json=payload)
+        # assert response.get('status') == 200
+        # assert response.get('content') == 'Data da consulta definida com sucesso'
+
+
+    def test_set_consult_time(self):
+        payload = {
+            "contact": {
+                "name": "",
+                "urn": "tel:+12065551212",
+                "uuid": "a998eda6-caaa-47d1-9ffc-3fd7a9753c84"
+            },
+            "flow": {
+                "name": "fluxo_registro",
+                "uuid": "5b767bce-e0e8-4211-919f-4dd6e3c46913"
+            },
+            "results": {
+                "message": {
+                    "category": "time_schedule",
+                    "value": self.generate_random_time()
+                }
+            }
+        }
+        response =  self.client.post("/set_consult_time", json=payload)
+        # assert response.get('status') == 200
+        # assert response.get('content') == 'Hora da consulta definida com sucesso'
+
+    def test_set_necessity(self):
+        payload = {
+            "contact": {
+                "name": "",
+                "urn": "tel:+12065551212",
+                "uuid": "a998eda6-caaa-47d1-9ffc-3fd7a9753c84"
+            },
+            "flow": {
+                "name": "fluxo_registro",
+                "uuid": "5b767bce-e0e8-4211-919f-4dd6e3c46913"
+            },
+            "results": {
+                "message": {
+                    "category": "necessity",
+                    "value": "Finalizar"
+                }
+            }
+        }
+        response =  self.client.post("/set_necessity", json=payload)
+        # assert response.get('status') == 200
 
     @task
-    def test_message_default(self):
-        while True:
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=Ol%C3%A1&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM179ae9925ce08795ced16d3a87f66366&NumMedia=0&ProfileName=Jhonata&SmsSid=SM179ae9925ce08795ced16d3a87f66366&WaId=558282136275&SmsStatus=received&Body=1&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM179ae9925ce08795ced16d3a87f66366&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=Jhonata Augusto&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=jhon.augustosilva@gmail.com&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=30/10/2004&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=57014-420&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=57014-630&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=112.178.614-67&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=4109829-3&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=145.000.875.165.186&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=Vergel do lago&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=Ol%C3%A1&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM179ae9925ce08795ced16d3a87f66366&NumMedia=0&ProfileName=Jhonata&SmsSid=SM179ae9925ce08795ced16d3a87f66366&WaId=558282136275&SmsStatus=received&Body=2&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM179ae9925ce08795ced16d3a87f66366&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=Cl%C3%ADnico&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=3&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=21/03/2023&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=08:00&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=Dor de dente&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(
-                locustfile.host, data=request_body, headers=locustfile.headers
-            )
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=Ol%C3%A1&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(locustfile.host, data=request_body, headers=locustfile.headers)
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM179ae9925ce08795ced16d3a87f66366&NumMedia=0&ProfileName=Jhonata&SmsSid=SM179ae9925ce08795ced16d3a87f66366&WaId=558282136275&SmsStatus=received&Body=3&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM179ae9925ce08795ced16d3a87f66366&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(locustfile.host, data=request_body, headers=locustfile.headers)
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=Exame de sangue&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(locustfile.host, data=request_body, headers=locustfile.headers)
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=1&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(locustfile.host, data=request_body, headers=locustfile.headers)
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=13/08/2023&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(locustfile.host, data=request_body, headers=locustfile.headers)
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=11:00&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(locustfile.host, data=request_body, headers=locustfile.headers)
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-
-            request_body = b"SmsMessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&NumMedia=0&ProfileName=Jhonata&SmsSid=SM01cd3925943ee3504f8a5c42d88efdf6&WaId=558282136275&SmsStatus=received&Body=analise de creatinina&To=whatsapp%3A%2B14155238886&NumSegments=1&ReferralNumMedia=0&MessageSid=SM01cd3925943ee3504f8a5c42d88efdf6&AccountSid=ACccec30b8f64bfa44a6dc60d2a447f5c5&From=whatsapp%3A%2B558282136275&ApiVersion=2010-04-01"
-            request = self.client.post(locustfile.host, data=request_body, headers=locustfile.headers)
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
-            print(f"REQUEST\n{request}", flush=True)
-            print(f"REQUEST\n{request}", flush=True)
-            assert request.status_code == 200
+    def test_scenario(self):
+        self.test_register_user()
+        self.test_set_specialty()
+        self.test_set_unity()
+        self.test_set_consult_date()
+        self.test_set_consult_time()
+        self.test_set_necessity()

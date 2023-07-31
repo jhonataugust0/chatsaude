@@ -125,8 +125,7 @@ class TestMakeSchedulingConsult:
                 }
             }
         }
-        flow_tester = TestMakeSchedulingConsult()
-        response = await flow_tester.request_register_consult(payload)
+        response = await self.request_register_consult(payload)
         assert response.get('status') == 200
         assert response.get('content') == 'Agendamento iniciado com sucesso'
 
@@ -149,8 +148,7 @@ class TestMakeSchedulingConsult:
                 }
             }
         }
-        flow_tester = TestMakeSchedulingConsult()
-        response = await flow_tester.request_specialty_consult(payload)
+        response = await self.request_specialty_consult(payload)
         assert response.get('status') == 200
         assert response.get('content') == 'Especialidade definida com sucesso'
 
@@ -198,10 +196,9 @@ class TestMakeSchedulingConsult:
                 }
             }
         }
-        flow_tester = TestMakeSchedulingConsult()
-        response = await flow_tester.request_unity_consult(payload)
+        response = await self.request_unity_consult(payload)
         assert response.get('status') == 200
-        assert response.get('content') == 'Email definido com sucesso'
+        assert response.get('content') == 'Unidade definida com sucesso'
 
     @pytest.mark.asyncio
     async def test_set_consult_date(self):
@@ -222,8 +219,7 @@ class TestMakeSchedulingConsult:
                 }
             }
         }
-        flow_tester = TestMakeSchedulingConsult()
-        response = await flow_tester.request_date_consult(payload)
+        response = await self.request_date_consult(payload)
         assert response.get('status') == 200
         assert response.get('content') == 'Data da consulta definida com sucesso'
 
@@ -246,8 +242,7 @@ class TestMakeSchedulingConsult:
                 }
             }
         }
-        flow_tester = TestMakeSchedulingConsult()
-        response = await flow_tester.request_time_consult(payload)
+        response = await self.request_time_consult(payload)
         assert response.get('status') == 200
         assert response.get('content') == 'Hora da consulta definida com sucesso'
 
@@ -270,6 +265,5 @@ class TestMakeSchedulingConsult:
                 }
             }
         }
-        flow_tester = TestMakeSchedulingConsult()
-        response = await flow_tester.request_necessity_consult(payload)
+        response = await self.request_necessity_consult(payload)
         assert response.get('status') == 200
