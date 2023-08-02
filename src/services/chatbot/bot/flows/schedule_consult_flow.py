@@ -1,13 +1,14 @@
+from typing import Union
 from fastapi import HTTPException, Response, status
-from src.services.chatbot.utils.date import convert_to_datetime, format_date_for_user, format_time_for_user, get_more_forty_five
+from services.chatbot.utils.date import convert_to_datetime, format_date_for_user, format_time_for_user, get_more_forty_five
 
-from src.services.health_unit.models.repository.unidade_repository import UnidadeRepository
-from src.services.schedules.consult.models.repository.consulta_agendameno_repository import AgendamentoConsultaRepository
+from services.health_unit.models.repository.unidade_repository import UnidadeRepository
+from services.schedules.consult.models.repository.consulta_agendameno_repository import AgendamentoConsultaRepository
 
-from .....log.logging import Logging
-from src.services.user.models.repository.user_repository import UserRepository
-from src.services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
-from src.services.health_agents.models.repository.especialidade_repository import EspecialidadeRepository
+from log.logging import Logging
+from services.user.models.repository.user_repository import UserRepository
+from services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
+from services.health_agents.models.repository.especialidade_repository import EspecialidadeRepository
 
 
 
@@ -82,7 +83,7 @@ class ScheduleConsultFlow:
         await schedule_consult_entity.insert_new_schedule_consult(self.user["id"]),
         return True
 
-    async def define_specialty_consult(self, message: str) -> bool | HTTPException:
+    async def define_specialty_consult(self, message: str) -> Union[str, HTTPException]:
         """
         Método responsável por definir a especialidade da con-
         sulta do usuário
@@ -122,7 +123,7 @@ class ScheduleConsultFlow:
             raise_message =  f"Desculpe, não foi possível definir a especialidade solicitada, {ScheduleConsultFlow.raise_message}"
             return {'status_code': status.HTTP_500_INTERNAL_SERVER_ERROR, 'detail': raise_message}
 
-    async def define_unity_consult(self, message: str) -> bool | HTTPException:
+    async def define_unity_consult(self, message: str) -> Union[str, HTTPException]:
         """
         Método responsável por definir unidade da consulta do
         usuário no banco de dados
@@ -160,7 +161,7 @@ class ScheduleConsultFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=raise_message
             )
 
-    async def define_date_consult(self, date: str) -> bool | HTTPException:
+    async def define_date_consult(self, date: str) -> Union[str, HTTPException]:
         """
         Método responsável por definir a data da consulta do
         usuário no banco de dados
@@ -198,7 +199,7 @@ class ScheduleConsultFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=raise_message
             )
 
-    async def define_time_consult(self, message: str) -> bool | HTTPException:
+    async def define_time_consult(self, message: str) -> Union[str, HTTPException]:
         """
         Método responsável por definir hora da consulta do
         usuário no banco de dados
@@ -242,7 +243,7 @@ class ScheduleConsultFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=raise_message
             )
 
-    async def define_necessity_consult(self, message: str) -> bool | HTTPException:
+    async def define_necessity_consult(self, message: str) -> Union[str, HTTPException]:
         """
         Método responsável por definir a necessidade da
         consulta do usuário no banco de dados
@@ -275,7 +276,7 @@ class ScheduleConsultFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def finalize_schedule_flow(self) -> str | HTTPException:
+    async def finalize_schedule_flow(self) -> Union[str, HTTPException]:
         """
         Método responsável por finalizar o fluxo de agendamento
             :params user: dict

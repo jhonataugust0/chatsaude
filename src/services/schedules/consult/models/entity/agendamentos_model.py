@@ -2,8 +2,8 @@ from typing import Any, Dict
 
 from sqlalchemy import (VARCHAR, BigInteger, Column, Date, ForeignKey, Integer,
                         Text, Time)
-from src.models.configs.base import Base
-from src.services.health_unit.models.entity.unidade_model import Unidade
+from models.configs.base import Base
+from services.health_unit.models.entity.unidade_model import Unidade
 
 
 class AgendamentoConsulta(Base):

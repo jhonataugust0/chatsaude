@@ -4,10 +4,10 @@ from fastapi import HTTPException, Response, status
 from sqlalchemy import MetaData, delete, select, update
 from sqlalchemy.orm.exc import NoResultFound
 
-from src.log.logging import Logging
-from src.services.health_unit.models.entity.unidade_model import Unidade
+from log.logging import Logging
+from services.health_unit.models.entity.unidade_model import Unidade
 
-from .....models.configs.connection import Connection
+from models.configs.connection import Connection
 
 
 class UnidadeRepository:

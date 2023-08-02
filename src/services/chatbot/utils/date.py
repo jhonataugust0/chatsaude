@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
+from typing import Union
 
 from fastapi import HTTPException, status
 
-from src.log.logging import Logging
+from log.logging import Logging
 
 
-async def get_more_forty_five(init_time: str) -> str | HTTPException:
+async def get_more_forty_five(init_time: str) -> Union[str, HTTPException]:
     """
     Define o horário do término do agendamento da consulta
     e/ ou do exame

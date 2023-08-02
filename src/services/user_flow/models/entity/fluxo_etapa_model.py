@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from sqlalchemy import Column, ForeignKey, Integer
 
-from .....models.configs.base import Base
+from models.configs.base import Base
 
 
 class FluxoEtapa(Base):

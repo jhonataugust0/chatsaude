@@ -5,10 +5,10 @@ from fastapi import HTTPException, Response, status
 from sqlalchemy import MetaData, delete, select, update
 from sqlalchemy.orm.exc import NoResultFound
 
-from src.log.logging import Logging
+from log.logging import Logging
 
-from .....models.configs.connection import Connection
-from ..entity.fluxo_etapa_model import FluxoEtapa
+from models.configs.connection import Connection
+from services.user_flow.models.entity.fluxo_etapa_model import FluxoEtapa
 
 
 class FluxoEtapaRepository:

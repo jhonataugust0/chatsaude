@@ -5,7 +5,7 @@ from fastapi import (APIRouter, Body, Depends, HTTPException, Request,
                      Response, status)
 
 
-from src.log.logging import Logging
+from log.logging import Logging
 
 class Bot:
     def __init__(self, tags: str = ["Bot"]):

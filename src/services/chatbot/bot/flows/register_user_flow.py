@@ -1,12 +1,12 @@
+from typing import Union
 from fastapi import HTTPException, Response, status
-from src.services.chatbot.bot.validators.document_validator import Document_validator
+from services.chatbot.bot.validators.document_validator import Document_validator
 
-from src.services.chatbot.bot.validators.input_validator import Input_validator
+from services.chatbot.bot.validators.input_validator import Input_validator
 
-from .....log.logging import Logging
-from ...utils.bot_utils import send_message
-from src.services.user.models.repository.user_repository import UserRepository
-from src.services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
+from log.logging import Logging
+from services.user.models.repository.user_repository import UserRepository
+from services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
 
 
 class RegisterUserFlow:
@@ -27,7 +27,7 @@ class RegisterUserFlow:
         await stage_entity.insert_new_user_flow(new_user["id"], 1, 1)
         return True
 
-    async def define_user_name(self, message: str) -> bool | HTTPException:
+    async def define_user_name(self, message: str) -> Union[str, HTTPException]:
         """
             Método responsável por registrar o nome do usuário
             no banco de dados.
@@ -61,7 +61,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_email(self, message) -> bool | HTTPException:
+    async def define_user_email(self, message) -> Union[str, HTTPException]:
         """
             Método responsável por registrar o email do usuário
             no banco de dados.
@@ -95,7 +95,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_nascent_date(self, nescient_date: str) -> bool | HTTPException:
+    async def define_user_nascent_date(self, nescient_date: str) -> Union[str, HTTPException]:
         """
             Método responsável por registrar a data de nascença
             do usuário no banco de dados.
@@ -130,7 +130,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_cep(self, message: str) -> bool | HTTPException:
+    async def define_user_cep(self, message: str) -> Union[str, HTTPException]:
         """
             Método responsável por registrar o CEP do usuário
             no banco de dados.
@@ -165,7 +165,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_cpf(self, message: str) -> bool | HTTPException:
+    async def define_user_cpf(self, message: str) -> Union[str, HTTPException]:
         """
             Método responsável por registrar o CPF do usuário
             no banco de dados.
@@ -202,7 +202,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_rg(self, message: str) -> bool | HTTPException:
+    async def define_user_rg(self, message: str) -> Union[str, HTTPException]:
         """
             Método responsável por registrar o RG do usuário
             no banco de dados.
@@ -237,7 +237,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_cns(self, message: str) -> bool | HTTPException:
+    async def define_user_cns(self, message: str) -> Union[str, HTTPException]:
         """
             Método responsável por registrar o cartão do SUS
             do usuário no banco de dados.
@@ -274,7 +274,7 @@ class RegisterUserFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=message_log
             )
 
-    async def define_user_district(self, message: str) -> bool | HTTPException:
+    async def define_user_district(self, message: str) -> Union[str, HTTPException]:
         """
             Método responsável por registrar bairro do usuário
             no banco de dados.

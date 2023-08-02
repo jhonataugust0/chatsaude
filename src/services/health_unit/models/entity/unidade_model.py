@@ -1,6 +1,6 @@
 from sqlalchemy import VARCHAR, BigInteger, Column, ForeignKey, Integer, Text
 
-from .....models.configs.base import Base
+from models.configs.base import Base
 
 
 class Unidade(Base):

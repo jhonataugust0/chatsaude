@@ -1,8 +1,8 @@
-from src.gateway.schemas.user_message_base import UserMessageBase
-from src.services.user.models.repository.user_repository import UserRepository
+from gateway.schemas.user_message_base import UserMessageBase
+from services.user.models.repository.user_repository import UserRepository
 from .bot import Bot
-from src.services.chatbot.bot.flows.register_user_flow import RegisterUserFlow
-from src.services.chatbot.bot.validators.input_validator import Input_validator
+from services.chatbot.bot.flows.register_user_flow import RegisterUserFlow
+from services.chatbot.bot.validators.input_validator import Input_validator
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 
 
