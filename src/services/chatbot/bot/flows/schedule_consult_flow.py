@@ -1,14 +1,14 @@
 from typing import Union
 from fastapi import HTTPException, Response, status
-from services.chatbot.utils.date import convert_to_datetime, format_date_for_user, format_time_for_user, get_more_forty_five
+from src.services.chatbot.utils.date import convert_to_datetime, format_date_for_user, format_time_for_user, get_more_forty_five
 
-from services.health_unit.models.repository.unidade_repository import UnidadeRepository
-from services.schedules.consult.models.repository.consulta_agendameno_repository import AgendamentoConsultaRepository
+from src.services.health_unit.models.repository.unidade_repository import UnidadeRepository
+from src.services.schedules.consult.models.repository.consulta_agendameno_repository import AgendamentoConsultaRepository
 
-from log.logging import Logging
-from services.user.models.repository.user_repository import UserRepository
-from services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
-from services.health_agents.models.repository.especialidade_repository import EspecialidadeRepository
+from src.log.logging import Logging
+from src.services.user.models.repository.user_repository import UserRepository
+from src.services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
+from src.services.health_agents.models.repository.especialidade_repository import EspecialidadeRepository
 
 
 

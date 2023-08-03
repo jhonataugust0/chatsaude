@@ -6,15 +6,15 @@ from sqlalchemy import (Date, MetaData, and_, delete, desc, func, select, text, 
                         update)
 from sqlalchemy.orm.exc import NoResultFound
 
-from log.logging import Logging
+from src.log.logging import Logging
 
-from models.configs.connection import Connection
-from services.schedules.consult.models.entity.agendamentos_model import AgendamentoConsulta
-from services.health_unit.models.entity.unidade_model import Unidade
-from services.user.models.entity.user_model import Usuario
-from services.health_agents.models.entity.especialidade_model import Especialidade
-from services.health_agents.models.repository.especialidade_repository import EspecialidadeRepository
-from services.health_unit.models.repository.unidade_repository import UnidadeRepository
+from src.models.configs.connection import Connection
+from src.services.schedules.consult.models.entity.agendamentos_model import AgendamentoConsulta
+from src.services.health_unit.models.entity.unidade_model import Unidade
+from src.services.user.models.entity.user_model import Usuario
+from src.services.health_agents.models.entity.especialidade_model import Especialidade
+from src.services.health_agents.models.repository.especialidade_repository import EspecialidadeRepository
+from src.services.health_unit.models.repository.unidade_repository import UnidadeRepository
 
 
 class AgendamentoConsultaRepository:

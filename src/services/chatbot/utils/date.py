@@ -3,7 +3,7 @@ from typing import Union
 
 from fastapi import HTTPException, status
 
-from log.logging import Logging
+from src.log.logging import Logging
 
 
 async def get_more_forty_five(init_time: str) -> Union[str, HTTPException]:

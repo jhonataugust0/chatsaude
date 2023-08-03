@@ -1,12 +1,12 @@
 from typing import Union
 from fastapi import HTTPException, Response, status
-from services.chatbot.bot.validators.document_validator import Document_validator
+from src.services.chatbot.bot.validators.document_validator import Document_validator
 
-from services.chatbot.bot.validators.input_validator import Input_validator
+from src.services.chatbot.bot.validators.input_validator import Input_validator
 
-from log.logging import Logging
-from services.user.models.repository.user_repository import UserRepository
-from services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
+from src.log.logging import Logging
+from src.services.user.models.repository.user_repository import UserRepository
+from src.services.user_flow.models.repository.fluxo_etapa_repository import FluxoEtapaRepository
 
 
 class RegisterUserFlow:

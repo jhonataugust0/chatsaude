@@ -3,9 +3,9 @@ from typing import Union
 import pytz
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status
-from log.logging import Logging
-from services.chatbot.utils.date import get_more_forty_five
-from services.schedules.consult.models.repository.consulta_agendameno_repository import AgendamentoConsultaRepository
+from src.log.logging import Logging
+from src.services.chatbot.utils.date import get_more_forty_five
+from src.services.schedules.consult.models.repository.consulta_agendameno_repository import AgendamentoConsultaRepository
 
 class Input_validator():
 

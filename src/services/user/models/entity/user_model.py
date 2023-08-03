@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from sqlalchemy import VARCHAR, BigInteger, Column, Date, Integer
 
-from models.configs.base import Base
+from src.models.configs.base import Base
 
 
 class Usuario(Base):

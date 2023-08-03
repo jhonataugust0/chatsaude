@@ -4,10 +4,10 @@ from fastapi import HTTPException, Response, status
 from sqlalchemy import MetaData, delete, select, update
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
-from log.logging import Logging
+from src.log.logging import Logging
 
-from models.configs.connection import Connection
-from services.health_agents.models.entity.especialidade_model import Especialidade
+from src.models.configs.connection import Connection
+from src.services.health_agents.models.entity.especialidade_model import Especialidade
 
 class EspecialidadeRepository:
     def __init__(self):

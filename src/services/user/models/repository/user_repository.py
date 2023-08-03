@@ -4,11 +4,11 @@ from fastapi import HTTPException, Response, status
 from sqlalchemy import MetaData, delete, insert, select, update
 from sqlalchemy.orm.exc import NoResultFound
 
-from log.logging import Logging
-from services.user.models.entity.user_model import Usuario
+from src.log.logging import Logging
+from src.services.user.models.entity.user_model import Usuario
 
-from models.configs.connection import Connection
-from services.user.models.entity.user_model import Usuario
+from src.models.configs.connection import Connection
+from src.services.user.models.entity.user_model import Usuario
 
 
 class UserRepository:

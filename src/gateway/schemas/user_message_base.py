@@ -1,11 +1,13 @@
+from ctypes import Union
+from typing import Any
 from pydantic import BaseModel, ValidationError, validator, root_validator, fields
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi import HTTPException
 from fastapi import APIRouter, Depends, HTTPException
-from services.chatbot.bot.validators.document_validator import Document_validator
+from src.services.chatbot.bot.validators.document_validator import Document_validator
 
-from services.chatbot.bot.validators.input_validator import Input_validator
+from src.services.chatbot.bot.validators.input_validator import Input_validator
 
 
 class Contact(BaseModel):
@@ -33,7 +35,7 @@ class Flow(BaseModel):
 
 class Message(BaseModel):
     category: str
-    value: str
+    value: Any
 
     @root_validator(pre=True)
     def validate_field(cls, values):

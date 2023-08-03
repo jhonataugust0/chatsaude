@@ -1,6 +1,6 @@
 import re
 from fastapi import HTTPException, status
-from log.logging import Logging
+from src.log.logging import Logging
 
 
 class Document_validator():

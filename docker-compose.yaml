@@ -2,13 +2,35 @@ version: '3'
 
 services:
   chatsaude:
-      build:
-        context: ./api
-      env_file: .env
-      ports:
-        - '8000:80'
-      volumes:
-        - .:/api
-      sysctls:
-        - net.ipv4.tcp_keepalive_time=200
-    
+    build:
+      context: ./src
+    env_file: .env
+    networks:
+      - api
+    ports:
+      - '80:8000'
+    volumes:
+      - .:/src
+    sysctls:
+      - net.ipv4.tcp_keepalive_time=200
+
+#   chatsaude-db:
+#     image: postgres:latest
+#     container_name: chatsaude-db
+#     hostname: chatsaude-db
+#     environment:
+#       POSTGRES_DB: chatsaude
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: 1234
+#     networks:
+#       - api
+#     ports:
+#       - '5432:5432'
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+
+# volumes:
+#   postgres_data:
+
+networks:
+  api:

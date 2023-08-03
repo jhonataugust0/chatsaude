@@ -3,7 +3,7 @@ import os
 import aiohttp
 from fastapi import HTTPException, Response, status
 
-from log.logging import Logging
+from src.log.logging import Logging
 
 
 async def send_message(message: str, number: str) -> Response | HTTPException:
