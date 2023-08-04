@@ -529,7 +529,7 @@ class AgendamentoConsultaRepository:
                                 DT_FINAL TIME := '{end_time}';
                             BEGIN
                                 RETURN QUERY SELECT agen.id, agen.id_unidade, agen.id_especialidade, agen.data_agendamento, agen.horario_inicio_agendamento, agen.horario_termino_agendamento
-                            FROM AGENDAMENTOS agen
+                            FROM AGENDAMENTO_CONSULTA agen
                             WHERE (agen.ID_UNIDADE = {id_unity}) AND (agen.ID_ESPECIALIDADE = {id_specialty}) AND (DIA = agen.DATA_AGENDAMENTO) AND
                             (
                                 ( DT_INICIO <= agen.HORARIO_INICIO_AGENDAMENTO AND DT_FINAL >= agen.HORARIO_INICIO_AGENDAMENTO )

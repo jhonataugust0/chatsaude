@@ -39,13 +39,15 @@ class ScheduleConsultFlow:
                 int(self.user["telefone"])
             )
         )
-        last_time = (
-            await consult_entity.get_last_time_scheduele_from_specialty_id(
-                int(data_schedule["id_especialidade"]),
-                int(data_schedule["id_unidade"]),
+        last_time = None
+        if data_schedule["id_especialidade"] is not None and data_schedule["id_unidade"] is not None:
+            last_time = (
+                await consult_entity.get_last_time_scheduele_from_specialty_id(
+                    int(data_schedule["id_especialidade"]),
+                    int(data_schedule["id_unidade"]),
+                )
             )
-        )
-        if data_schedule["id_unidade"] and last_time:
+        if last_time is not None and data_schedule["id_unidade"] is not None:
             data = await format_date_for_user(last_time["data_agendamento"])
             hora = await format_time_for_user(
                 last_time["horario_termino_agendamento"]

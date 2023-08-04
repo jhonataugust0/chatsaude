@@ -11,8 +11,8 @@ class TestMakeSchedulingConsult(HttpUser):
         'Accept': 'application/json',
         "Content-Type": "application/json",
         }
-    # host = "http://localhost:8000"
-    host = "http://3.19.157.191"
+    host = "http://localhost:8000"
+    # host = "http://3.19.157.191"
 
     def generate_random_date(self):
         start_date = datetime(2023, 8, 1)
