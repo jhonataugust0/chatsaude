@@ -12,7 +12,7 @@ class TestMakeSchedulingConsult(HttpUser):
         "Content-Type": "application/json",
         }
     # host = "http://localhost:8000"
-    host = "http://52.67.153.188"
+    host = "https://chatsaude-api.onrender.com"
 
     def generate_random_date(self):
         start_date = datetime(2023, 8, 1)

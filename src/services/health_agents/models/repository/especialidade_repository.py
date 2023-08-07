@@ -11,7 +11,7 @@ from src.services.health_agents.models.entity.especialidade_model import Especia
 
 class EspecialidadeRepository:
     def __init__(self):
-        self.connection_url = os.environ.get('CONNECTION_URL')
+        self.connection_url = "postgresql+asyncpg://postgres:16049Cavalodetroia@chatsaude-db.cwen8bgbqsd6.sa-east-1.rds.amazonaws.com:5432/chatsaude
 
     async def select_all(self) -> List[Dict[str, Especialidade]]:
         """
