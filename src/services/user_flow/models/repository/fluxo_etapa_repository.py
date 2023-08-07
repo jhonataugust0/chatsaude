@@ -13,7 +13,7 @@ from src.services.user_flow.models.entity.fluxo_etapa_model import FluxoEtapa
 
 class FluxoEtapaRepository:
     def __init__(self):
-        self.connection_url = "postgresql+asyncpg://postgres:16049Cavalodetroia@chatsaude-db.cwen8bgbqsd6.sa-east-1.rds.amazonaws.com:5432/chatsaude"
+        self.connection_url = os.getenv('CONNECTION_URL')
 
     async def select_all(self) -> List[Dict[str, FluxoEtapa]]:
         """

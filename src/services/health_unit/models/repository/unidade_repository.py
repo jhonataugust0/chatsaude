@@ -12,7 +12,7 @@ from src.models.configs.connection import Connection
 
 class UnidadeRepository:
     def __init__(self):
-        self.connection_url = "postgresql+asyncpg://postgres:16049Cavalodetroia@chatsaude-db.cwen8bgbqsd6.sa-east-1.rds.amazonaws.com:5432/chatsaude"
+        self.connection_url = os.getenv('CONNECTION_URL')
 
     async def select_all(self) -> List[Dict[str, Unidade]]:
         async with Connection(connection_url=self.connection_url) as connection:
