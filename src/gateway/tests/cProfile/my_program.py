@@ -1,3 +1,5 @@
+import asyncio
+import cProfile
 from datetime import datetime, timedelta
 import json
 import random
@@ -6,7 +8,6 @@ import httpx
 
 from fastapi.testclient import TestClient
 import pytest
-
 
 class TestMakeSchedulingConsult:
     headers = {
@@ -107,7 +108,7 @@ class TestMakeSchedulingConsult:
             response.raise_for_status()
             return response.json()
 
-    @pytest.mark.asyncio
+
     async def test_register_user(self):
         payload = {
             "contact": {
@@ -130,7 +131,7 @@ class TestMakeSchedulingConsult:
         assert response.get('status') == 200
         assert response.get('content') == 'Agendamento iniciado com sucesso'
 
-    @pytest.mark.asyncio
+
     async def test_set_specialty(self):
         payload = {
             "contact": {
@@ -153,7 +154,7 @@ class TestMakeSchedulingConsult:
         assert response.get('status') == 200
         assert response.get('content') == 'Especialidade definida com sucesso'
 
-    @pytest.mark.asyncio
+
     async def test_set_unity(self):
         payload = {
             "contact": {
@@ -176,7 +177,7 @@ class TestMakeSchedulingConsult:
         assert response.get('status') == 200
         assert response.get('content') == 'Unidade definida com sucesso'
 
-    @pytest.mark.asyncio
+
     async def test_set_consult_date(self):
         payload = {
             "contact": {
@@ -199,7 +200,7 @@ class TestMakeSchedulingConsult:
         assert response.get('status') == 200
         assert response.get('content') == 'Data da consulta definida com sucesso'
 
-    @pytest.mark.asyncio
+
     async def test_set_consult_time(self):
         payload = {
             "contact": {
@@ -222,7 +223,7 @@ class TestMakeSchedulingConsult:
         assert response.get('status') == 200
         assert response.get('content') == 'Hora da consulta definida com sucesso'
 
-    @pytest.mark.asyncio
+
     async def test_set_necessity(self):
         payload = {
             "contact": {
@@ -244,3 +245,13 @@ class TestMakeSchedulingConsult:
         response = await self.request_necessity_consult(payload)
         assert response.get('status') == 200
 
+    async def main(self):
+        await self.test_register_user()
+        await self.test_set_specialty()
+        await self.test_set_unity()
+        await self.test_set_consult_date()
+        await self.test_set_consult_time()
+        await self.test_set_necessity()
+
+    if __name__ == "__main__":
+        cProfile.run("asyncio.run(main())", filename="profilling_test_2")
