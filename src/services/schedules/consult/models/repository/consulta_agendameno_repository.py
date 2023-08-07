@@ -19,7 +19,7 @@ from src.services.health_unit.models.repository.unidade_repository import Unidad
 
 class AgendamentoConsultaRepository:
     def __init__(self):
-        self.connection_url = "postgresql+asyncpg://postgres:16049Cavalodetroia@chatsaude-db.cwen8bgbqsd6.sa-east-1.rds.amazonaws.com:5432/chatsaude
+        self.connection_url = "postgresql+asyncpg://postgres:16049Cavalodetroia@chatsaude-db.cwen8bgbqsd6.sa-east-1.rds.amazonaws.com:5432/chatsaude"
 
     async def select_all(self) -> List[Dict[str, AgendamentoConsulta]]:
         """
